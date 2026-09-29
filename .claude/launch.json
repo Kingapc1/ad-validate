@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "static-preview",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [".claude/serve.py"],
+      "port": 8743,
+      "autoPort": true
+    }
+  ]
+}

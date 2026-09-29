@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ad Validate v2 — Background Run</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F8F9FB; --paper-2:#FFFFFF;
+    --ink:#3E4850; --muted:#6F8190; --soft:#A6B4BF;
+    --rule:rgba(62,72,80,.12); --rule-solid:#DBE1E5;
+    --accent:#7F70EF; --accent-tint:rgba(127,112,239,.10); --link:#283DD7;
+    --crit:#F5303A; --warn:#FFA800; --ok:#2FC639;
+    --font-sans:'Sarabun',sans-serif; --font-mono:'Roboto Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-sans)}
+  .page{width:min(1100px,100%);margin:0 auto;padding:0 32px}
+  header{padding-top:56px}
+  .eyebrow{font:500 11px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:36px;line-height:1.18;font-weight:500;margin:10px 0 0}
+  .lede{color:var(--muted);font-size:14px;line-height:1.8;max-width:760px;margin:12px 0 0}
+  nav.toc{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0 0;padding:0 0 4px}
+  nav.toc a{font:500 11px var(--font-mono);letter-spacing:.06em;text-decoration:none;color:var(--muted);
+    border:1px solid var(--rule);border-radius:6px;padding:7px 12px;background:var(--paper-2)}
+  nav.toc a:hover{border-color:var(--accent);color:var(--accent)}
+  section{padding-top:64px}
+  h2{font-size:24px;font-weight:500;margin:10px 0 0}
+  .note{color:var(--muted);font-size:13px;line-height:1.8;max-width:760px;margin:10px 0 0}
+  .figure{margin:24px 0 0;overflow-x:auto}
+  svg{display:block;max-width:none}
+  svg text{font-family:var(--font-sans)}
+  .aside{font-style:italic;font-size:14px;color:var(--muted);line-height:1.8;border-left:2px solid var(--accent);
+    padding:2px 0 2px 16px;margin:24px 0 0;max-width:700px}
+  table{border-collapse:collapse;width:100%;margin:24px 0 0;font-size:13px;background:var(--paper-2);
+    border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+  th{text-align:left;font:500 10px var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    padding:12px 16px;border-bottom:1px solid var(--rule);background:var(--paper)}
+  td{padding:12px 16px;border-bottom:1px solid var(--rule);color:var(--muted);line-height:1.7;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td b{color:var(--ink);font-weight:600}
+  code{font-family:var(--font-mono);font-size:11.5px;background:rgba(127,112,239,.08);color:var(--link);padding:1px 5px;border-radius:3px}
+  .sev{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:7px;vertical-align:1px}
+  .s-crit{background:var(--crit)} .s-warn{background:var(--warn)} .s-info{background:var(--muted)}
+  .s-man{background:var(--link)} .s-na{background:var(--soft)}
+  .cards{display:grid;grid-template-columns:1.1fr 1fr .95fr;gap:20px;margin:24px 0 0}
+  .card{background:var(--paper-2);border:1px solid var(--rule);border-radius:6px;padding:20px 22px}
+  .card .eyebrow{font-size:10px}
+  .card-header{display:flex;align-items:center;gap:8px;margin:10px 0 8px}
+  .card-dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .dot-accent{background:var(--accent)} .dot-ink{background:var(--ink)} .dot-link{background:var(--link)}
+  .card h3{font-size:16px;font-weight:600;margin:0}
+  .card ul{margin:0;padding-left:16px;color:var(--muted);font-size:13px;line-height:1.85}
+  footer{margin-top:72px;padding:0 0 64px}
+  footer .bar{border-top:1px solid var(--rule);padding-top:14px;font:400 11px var(--font-mono);color:var(--muted);
+    letter-spacing:.06em;display:flex;gap:18px;flex-wrap:wrap}
+  footer a{color:var(--link);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  @media(max-width:900px){.cards{grid-template-columns:1fr}h1{font-size:27px}}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<header>
+  <div class="eyebrow">Ad Validate · Deep dive · v2 (2026-09-25)</div>
+  <h1>Flow ภายใน · เงื่อนไข logic · โครงสร้างโปรเจค</h1>
+  <p class="lede">เวอร์ชัน 2 ของเอกสาร deep dive — ปรับจาก feedback ว่าการ crawl เว็บ / ดึง API / ส่ง API ที่แก้ไขในหน้า Ad Validate ใช้เวลานาน จึงเปลี่ยนจากหน้า Loading ที่บล็อกหน้าจอ เป็น<b>รอบตรวจใน background</b> พร้อม<b>คิวรอส่งตรวจ</b>สำหรับการแก้ไขที่ Apply แล้ว และ<b>แจ้งผลทาง In-app + LINE OA XPluser / Email</b> · Cron 00:00 ยังรันตามเวลาเดิม · ส่วนที่ไม่เปลี่ยน (precondition, gate logic, P-027, rule inventory, โครงสร้าง) คงไว้ตาม v1 · <a href="ad-validate.html" style="color:#283DD7">ดู v1</a> · <a href="../docs/superpowers/specs/2026-09-25-background-validate-notify-design.md" style="color:#283DD7">Design spec</a></p>
+  <nav class="toc">
+    <a href="user-flow-v2.html">← User flow หลัก (v2)</a>
+    <a href="rule-set.html">Rule set reference</a>
+    <a href="#precondition">01 · Precondition gate</a>
+    <a href="#flow">02 · Flow ภายใน (v2)</a>
+    <a href="#run">02b · Run lifecycle</a>
+    <a href="#notify">02c · Notification</a>
+    <a href="#gate">03 · Gate logic</a>
+    <a href="#p027">04 · P-027 decision tree</a>
+    <a href="#rules">05 · Severity &amp; rule inventory</a>
+    <a href="#structure">06 · โครงสร้างโปรเจค</a>
+  </nav>
+</header>
+
+<!-- ═══════════════════ 01 · PRECONDITION ═══════════════════ -->
+<section id="precondition">
+  <div class="eyebrow">01 / Flowchart</div>
+  <h2>Precondition gate — ลำดับบังคับใน New Job ก่อนกดปุ่ม Validate</h2>
+  <p class="note">ทั้งหมดนี้เกิดขึ้น<b>ในหน้า New Job ก่อนกดปุ่ม Validate</b> — ไม่ใช่กดเข้า Ad Validate แล้วค่อยมาเจอว่าข้อมูลขาด · ของเดิมบังคับแค่ว่า Business และ Contact ต้องครบจนหลอดเขียวเต็ม แต่<b>ไม่เคยบังคับลำดับ</b> MCC จะทำอันไหนก่อนก็ได้ · flow ใหม่บังคับลำดับเป็น <b>Contact ก่อน แล้วค่อย Business</b> โดย Contact เองมี 2 ขั้นที่ต้องทำเรียงกัน และขั้นถัดไปถูกล็อกจนกว่าขั้นก่อนหน้าจะสำเร็จ</p>
+
+  <div class="figure">
+  <svg width="880" height="920" viewBox="0 0 880 920" role="img" aria-labelledby="pre-title pre-desc">
+    <title id="pre-title">Precondition gate แบบบังคับลำดับ</title>
+    <desc id="pre-desc">Flowchart ของ precondition สามขั้นในหน้า New Job ที่ต้องทำเรียงกัน หลังงานผ่านรอบ Present และลูกค้าไม่มีรายการแก้ไขแล้ว — ขั้นที่หนึ่งเชื่อม Line OA ของลูกค้ากับระบบ ขั้นที่สองเชื่อมต่อ Plus AdTech ทั้งสองขั้นอยู่ในกลุ่ม Contact ที่ต้องทำให้ครบก่อน จากนั้นขั้นที่สามจึงปลดล็อกให้กรอก Business information ได้ เมื่อครบทุก field แล้วปุ่ม Validate จึงใช้งานได้และเปิด Ad Validate พร้อม job context ทุกขั้นที่ยังไม่สำเร็จจะวนกลับไปทำขั้นเดิมต่อ</desc>
+
+    <defs>
+      <marker id="pre-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6F8190"/></marker>
+      <marker id="pre-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7F70EF"/></marker>
+    </defs>
+    <rect width="880" height="920" fill="#F8F9FB"/>
+
+    <!-- zone: CONTACT (drawn before arrows and nodes) -->
+    <rect x="272" y="136" width="336" height="428" rx="8" fill="rgba(127,112,239,.05)" stroke="rgba(127,112,239,.50)" stroke-width="1" stroke-dasharray="4,4"/>
+    <rect x="288" y="140" width="216" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="396" y="149" fill="#7F70EF" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".12em">CONTACT — ต้องครบก่อนเสมอ</text>
+
+    <!-- arrows -->
+    <line x1="440" y1="112" x2="440" y2="168" stroke="#6F8190" stroke-width="1.2" marker-end="url(#pre-arrow)"/>
+    <line x1="440" y1="232" x2="440" y2="260" stroke="#6F8190" stroke-width="1.2" marker-end="url(#pre-arrow)"/>
+    <line x1="440" y1="332" x2="440" y2="368" stroke="#6F8190" stroke-width="1.2" marker-end="url(#pre-arrow)"/>
+    <line x1="440" y1="432" x2="440" y2="460" stroke="#6F8190" stroke-width="1.2" marker-end="url(#pre-arrow)"/>
+    <line x1="440" y1="532" x2="440" y2="568" stroke="#6F8190" stroke-width="1.2" marker-end="url(#pre-arrow)"/>
+    <line x1="440" y1="632" x2="440" y2="660" stroke="#6F8190" stroke-width="1.2" marker-end="url(#pre-arrow)"/>
+    <line x1="440" y1="732" x2="440" y2="776" stroke="#7F70EF" stroke-width="1.6" marker-end="url(#pre-arrow-accent)"/>
+    <path d="M 364,296 H 304 Q 296,296 296,288 V 208 Q 296,200 304,200 H 320" fill="none" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#pre-arrow)"/>
+    <path d="M 364,496 H 304 Q 296,496 296,488 V 408 Q 296,400 304,400 H 320" fill="none" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#pre-arrow)"/>
+    <path d="M 356,696 H 304 Q 296,696 296,688 V 608 Q 296,600 304,600 H 320" fill="none" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#pre-arrow)"/>
+
+    <!-- arrow labels -->
+    <rect x="450" y="344" width="64" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="482" y="353" fill="#6F8190" font-size="9" text-anchor="middle">สำเร็จ</text>
+    <rect x="450" y="544" width="64" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="482" y="553" fill="#6F8190" font-size="9" text-anchor="middle">สำเร็จ</text>
+    <rect x="450" y="744" width="72" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="486" y="753" fill="#7F70EF" font-size="9" font-weight="600" text-anchor="middle">ครบแล้ว</text>
+    <rect x="306" y="242" width="72" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="342" y="251" fill="#6F8190" font-size="9" text-anchor="middle">ยังไม่สำเร็จ</text>
+    <rect x="306" y="442" width="72" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="342" y="451" fill="#6F8190" font-size="9" text-anchor="middle">ยังไม่สำเร็จ</text>
+    <rect x="306" y="642" width="64" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="338" y="651" fill="#6F8190" font-size="9" text-anchor="middle">ยังไม่ครบ</text>
+
+    <!-- nodes -->
+    <rect x="320" y="64" width="240" height="48" rx="24" fill="#F8F9FB"/>
+    <rect x="320" y="64" width="240" height="48" rx="24" fill="rgba(111,129,144,.10)" stroke="#A6B4BF" stroke-width="1"/>
+    <text x="440" y="86" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">MCC อยู่ในหน้า New Job / Workbook</text>
+    <text x="440" y="100" fill="#6F8190" font-size="9" text-anchor="middle">ผ่านรอบ Present แล้ว · ลูกค้าไม่มีรายการแก้ไข</text>
+
+    <rect x="320" y="168" width="240" height="64" rx="6" fill="#F8F9FB"/>
+    <rect x="320" y="168" width="240" height="64" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <rect x="328" y="176" width="48" height="12" rx="2" fill="transparent" stroke="rgba(62,72,80,.40)" stroke-width=".8"/>
+    <text x="352" y="185" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">STEP 1</text>
+    <text x="440" y="208" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">เชื่อม Line OA ของลูกค้ากับระบบ</text>
+    <text x="440" y="222" fill="#6F8190" font-size="9" text-anchor="middle">Contact · ขั้นที่ 1 จาก 2 — เริ่มที่นี่เท่านั้น</text>
+
+    <polygon points="440,260 516,296 440,332 364,296" fill="#F8F9FB"/>
+    <polygon points="440,260 516,296 440,332 364,296" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="440" y="300" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">เชื่อมสำเร็จ?</text>
+
+    <rect x="320" y="368" width="240" height="64" rx="6" fill="#F8F9FB"/>
+    <rect x="320" y="368" width="240" height="64" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <rect x="328" y="376" width="48" height="12" rx="2" fill="transparent" stroke="rgba(62,72,80,.40)" stroke-width=".8"/>
+    <text x="352" y="385" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">STEP 2</text>
+    <text x="440" y="408" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">เชื่อมต่อ Plus AdTech</text>
+    <text x="440" y="422" fill="#6F8190" font-size="9" text-anchor="middle">ล็อกจนกว่าขั้นที่ 1 จะสำเร็จ</text>
+
+    <polygon points="440,460 516,496 440,532 364,496" fill="#F8F9FB"/>
+    <polygon points="440,460 516,496 440,532 364,496" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="440" y="500" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">เชื่อมสำเร็จ?</text>
+
+    <rect x="320" y="568" width="240" height="64" rx="6" fill="#F8F9FB"/>
+    <rect x="320" y="568" width="240" height="64" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <rect x="328" y="576" width="48" height="12" rx="2" fill="transparent" stroke="rgba(62,72,80,.40)" stroke-width=".8"/>
+    <text x="352" y="585" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">STEP 3</text>
+    <text x="440" y="608" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">กรอก Business information ให้ครบ</text>
+    <text x="440" y="622" fill="#6F8190" font-size="9" text-anchor="middle">ล็อกจนกว่า Contact ครบทั้ง 2 ขั้น</text>
+
+    <polygon points="440,660 524,696 440,732 356,696" fill="#F8F9FB"/>
+    <polygon points="440,660 524,696 440,732 356,696" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="440" y="700" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">ครบทุก field?</text>
+
+    <rect x="304" y="776" width="272" height="48" rx="24" fill="#F8F9FB"/>
+    <rect x="304" y="776" width="272" height="48" rx="24" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="440" y="798" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">ปุ่ม “Validate” ใช้งานได้</text>
+    <text x="440" y="812" fill="#7F70EF" font-size="9" text-anchor="middle">กดแล้วเปิด Ad Validate พร้อม job context</text>
+
+    <!-- legend -->
+    <line x1="32" y1="860" x2="848" y2="860" stroke="rgba(62,72,80,.10)" stroke-width=".8"/>
+    <text x="32" y="880" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".14em">LEGEND</text>
+    <rect x="116" y="872" width="20" height="10" rx="5" fill="rgba(111,129,144,.10)" stroke="#A6B4BF" stroke-width="1"/>
+    <text x="144" y="880" fill="#6F8190" font-size="9">เริ่มต้น</text>
+    <rect x="212" y="872" width="20" height="10" rx="3" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="240" y="880" fill="#6F8190" font-size="9">ขั้นตอนบังคับ</text>
+    <polygon points="336,872 352,877 336,882 320,877" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="360" y="880" fill="#6F8190" font-size="9">จุดตัดสิน</text>
+    <rect x="428" y="872" width="20" height="10" rx="2" fill="rgba(127,112,239,.05)" stroke="rgba(127,112,239,.50)" stroke-width="1" stroke-dasharray="4,4"/>
+    <text x="456" y="880" fill="#6F8190" font-size="9">กลุ่มที่ต้องทำครบก่อน</text>
+    <line x1="604" y1="877" x2="640" y2="877" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4"/>
+    <text x="648" y="880" fill="#6F8190" font-size="9">ยังไปต่อไม่ได้ — วนกลับขั้นเดิม</text>
+  </svg>
+  </div>
+
+  <table>
+    <thead><tr><th style="width:150px">ประเด็น</th><th style="width:300px">พฤติกรรมเดิม</th><th>พฤติกรรมที่ต้องปรับ</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>ลำดับการทำ</b></td>
+        <td>ทำ Business หรือ Contact ก่อนก็ได้ ระบบไม่สนใจลำดับ</td>
+        <td><b>บังคับลำดับ</b> — Contact ขั้นที่ 1 → Contact ขั้นที่ 2 → Business information</td>
+      </tr>
+      <tr>
+        <td><b>เงื่อนไขผ่าน</b></td>
+        <td>ดูแค่ว่าหลอดความคืบหน้าเขียวเต็มทั้งสองฝั่ง</td>
+        <td>แต่ละขั้นต้องผ่านเองก่อน ขั้นถัดไปจึงถูกปลดล็อก — หลอดเต็มอย่างเดียวไม่พอถ้าลำดับไม่ถูก</td>
+      </tr>
+      <tr>
+        <td><b>สถานะขั้นถัดไป</b></td>
+        <td>เปิดให้แก้ไขได้ตลอด</td>
+        <td><code>disabled</code> จนกว่าขั้นก่อนหน้าจะสำเร็จ · ต้องบอกด้วยว่าติดอยู่ที่ขั้นไหนและต้องทำอะไรต่อ</td>
+      </tr>
+      <tr>
+        <td><b>ปุ่ม “Validate”<br>ใน New Job</b></td>
+        <td>เปิดเมื่อข้อมูลครบ</td>
+        <td>เปิดเมื่อผ่านครบ <b>ตามลำดับ</b> ทั้ง 3 ขั้น — บังคับที่ backend ไม่ใช่แค่ disable ปุ่มใน UI · กดได้เมื่อไหร่ = เข้า Ad Validate ได้เมื่อนั้น</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="cards">
+    <div class="card">
+      <p class="eyebrow">Contact · ขั้นที่ 1</p>
+      <div class="card-header"><span class="card-dot dot-accent"></span><h3>เชื่อม Line OA ลูกค้า</h3></div>
+      <ul>
+        <li>ผูก Line OA ของลูกค้าเข้ากับระบบ — เป็นขั้นแรกสุดเสมอ ไม่มีทางข้าม</li>
+        <li>ต้องเก็บผลลัพธ์การเชื่อมเป็นสถานะจริง ไม่ใช่แค่ checkbox ที่ผู้ใช้ติ๊กเอง</li>
+        <li>ถ้ายังไม่สำเร็จ ขั้นที่ 2 ต้องอยู่ในสถานะ <code>disabled</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <p class="eyebrow">Contact · ขั้นที่ 2</p>
+      <div class="card-header"><span class="card-dot dot-accent"></span><h3>เชื่อมต่อ Plus AdTech</h3></div>
+      <ul>
+        <li>ปลดล็อกหลังขั้นที่ 1 สำเร็จเท่านั้น</li>
+        <li>เมื่อครบทั้ง 2 ขั้นแล้ว Contact ถือว่าผ่าน และ Business information จึงเปิดให้กรอก</li>
+        <li>เชื่อมโยงกับ P-025 / P-028 ในภายหลัง — script health และ event conflict ของ Plus AdTech</li>
+      </ul>
+    </div>
+    <div class="card">
+      <p class="eyebrow">ขั้นที่ 3</p>
+      <div class="card-header"><span class="card-dot dot-ink"></span><h3>Business information</h3></div>
+      <ul>
+        <li>กรอกให้ครบทุก field ที่จำเป็นตามที่ New Job ส่งมาเป็น requirement</li>
+        <li>ครบแล้ว precondition จึงผ่าน และปุ่ม “Validate” ใน New Job ถึงใช้งานได้</li>
+        <li>ยังต้องรองรับกรณีข้อมูลถูกแก้ทีหลัง — ถ้าไม่ครบอีกครั้ง ต้องกลับไปสถานะล็อก</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="aside">ผลที่ตามมาของการย้าย gate นี้ไปไว้ใน New Job: เมื่อ Ad Validate ถูกเปิดขึ้นมา ข้อมูล Contact และ Business ต้องครบอยู่แล้วเสมอ — Ad Validate จึงไม่ใช่ที่ที่ผู้ใช้จะมารู้ตัวว่าข้อมูลขาด สิ่งที่ Ad Validate ตรวจคือ <b>ตัว contract ที่รับมา</b> ตาม FR-01 เท่านั้น (ดู §02)</p>
+</section>
+
+<!-- ═══════════════════ 02 · FLOW ═══════════════════ -->
+<section id="flow">
+  <div class="eyebrow">02 / Flowchart · v2</div>
+  <h2>Flow ภายใน Ad Validate — ตรวจแบบ background + คิวรอส่งตรวจ</h2>
+  <p class="note">สิ่งที่เปลี่ยนจาก v1 (กล่องที่มีป้าย <b style="color:#7F70EF">NEW</b>): ① ทุกรอบตรวจที่ผู้ใช้กดเอง ทั้ง “เริ่มตรวจ” และ “ส่งตรวจสอบใหม่” รันใน <b>background</b> ไม่มีหน้า Loading บล็อกอีก ② การแก้ไขแล้วกด <b>Apply</b> จะ<b>เก็บเป็น draft ในคิว</b> ยังไม่ยิงไปที่ platform จนกว่าจะกด “ส่งตรวจสอบใหม่” จากนั้นระบบยิงการแก้ไขทั้งชุด แล้วตรวจใหม่ทั้งชุด ③ เมื่อตรวจเสร็จ แจ้งคนที่กดผ่าน In-app + LINE OA <b>XPluser</b> (ใช้ Email ถ้าส่ง LINE ไม่สำเร็จ) ④ Cron 00:00 ยังรันตามเวลาเดิม เป็น full re-scan แต่ไม่ยิง draft แทนผู้ใช้</p>
+
+  <div class="figure">
+  <svg width="960" height="1128" viewBox="0 0 960 1128" role="img" aria-labelledby="avflow2-title avflow2-desc">
+    <title id="avflow2-title">Flow ภายในของ Ad Validate เวอร์ชัน 2</title>
+    <desc id="avflow2-desc">Flowchart ตั้งแต่เปิด Ad Validate พร้อม job context ตรวจว่า context ใช้ได้หรือไม่ จากนั้น MCC กดเริ่มตรวจหรือส่งตรวจสอบใหม่ ระบบสร้าง run สถานะ queued แล้ว worker รันใน background สี่ขั้น คือส่ง draft ไป platform สแกน Ads API และ crawl เว็บ ประเมิน rule ทั้งชุด และบันทึกผล ระหว่างนั้นหน้าเป็นแบบอ่านอย่างเดียวและผู้ใช้ออกจากหน้าได้ Cron เที่ยงคืนเข้าสู่ขั้น background run เดียวกันแต่ไม่ยิง draft และส่ง digest ตอน 08:30 เมื่อรันเสร็จระบบแจ้งผลทาง In-app และ LINE XPluser โดยใช้ Email เป็นช่องทางสำรอง ถ้ามี Critical fail ผู้ใช้แก้ไขแล้วกด Apply ซึ่งเก็บเป็น draft ในคิวรอส่งตรวจ แล้วกดส่งตรวจสอบใหม่เพื่อวนกลับไปรันทั้งชุด ถ้าไม่มี Critical แต่มี Warning หรือ Manual ต้องให้ผู้มีสิทธิ์ยืนยันก่อนจบเป็น validation completed</desc>
+
+    <defs>
+      <marker id="f2-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6F8190"/></marker>
+      <marker id="f2-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7F70EF"/></marker>
+    </defs>
+    <rect width="960" height="1128" fill="#F8F9FB"/>
+
+    <!-- ══ arrows first ══ -->
+    <line x1="400" y1="112" x2="400" y2="156" stroke="#6F8190" stroke-width="1.2" marker-end="url(#f2-arrow)"/>
+    <line x1="472" y1="192" x2="616" y2="192" stroke="#6F8190" stroke-width="1.2" marker-end="url(#f2-arrow)"/>
+    <path d="M 752,164 V 96 Q 752,88 744,88 H 520" fill="none" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#f2-arrow)"/>
+    <line x1="400" y1="228" x2="400" y2="292" stroke="#6F8190" stroke-width="1.2" marker-end="url(#f2-arrow)"/>
+    <!-- trigger → run -->
+    <line x1="400" y1="352" x2="400" y2="396" stroke="#7F70EF" stroke-width="1.6" marker-end="url(#f2-arrow-accent)"/>
+    <!-- side note connector -->
+    <line x1="208" y1="456" x2="232" y2="456" stroke="rgba(62,72,80,.30)" stroke-width="1" stroke-dasharray="2,3"/>
+    <!-- cron → run -->
+    <line x1="632" y1="432" x2="572" y2="432" stroke="#6F8190" stroke-width="1.2" marker-end="url(#f2-arrow)"/>
+    <!-- cron → digest -->
+    <line x1="760" y1="472" x2="760" y2="556" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#f2-arrow)"/>
+    <!-- run → notify -->
+    <line x1="400" y1="520" x2="400" y2="556" stroke="#7F70EF" stroke-width="1.6" marker-end="url(#f2-arrow-accent)"/>
+    <!-- notify → critical -->
+    <line x1="400" y1="616" x2="400" y2="660" stroke="#6F8190" stroke-width="1.2" marker-end="url(#f2-arrow)"/>
+    <!-- critical → fix -->
+    <line x1="480" y1="700" x2="612" y2="700" stroke="#7F70EF" stroke-width="1.6" marker-end="url(#f2-arrow-accent)"/>
+    <!-- fix → queue -->
+    <line x1="752" y1="740" x2="752" y2="776" stroke="#7F70EF" stroke-width="1.6" marker-end="url(#f2-arrow-accent)"/>
+    <!-- queue → trigger (loop: ส่งตรวจสอบใหม่) -->
+    <path d="M 888,808 H 912 Q 920,808 920,800 V 332 Q 920,324 912,324 H 548" fill="none" stroke="#7F70EF" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#f2-arrow-accent)"/>
+    <!-- critical → warning -->
+    <line x1="400" y1="740" x2="400" y2="836" stroke="#6F8190" stroke-width="1.2" marker-end="url(#f2-arrow)"/>
+    <!-- warning → approval -->
+    <line x1="488" y1="872" x2="612" y2="872" stroke="#6F8190" stroke-width="1.2" marker-end="url(#f2-arrow)"/>
+    <!-- approval → end -->
+    <path d="M 752,900 V 988 Q 752,996 744,996 H 556" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#f2-arrow)"/>
+    <!-- warning → end -->
+    <line x1="400" y1="908" x2="400" y2="968" stroke="#6F8190" stroke-width="1.2" marker-end="url(#f2-arrow)"/>
+
+    <!-- ══ arrow labels ══ -->
+    <rect x="512" y="172" width="64" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="544" y="181" fill="#6F8190" font-size="9" text-anchor="middle">ไม่ผ่าน</text>
+    <rect x="580" y="68" width="104" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="632" y="77" fill="#6F8190" font-size="9" text-anchor="middle">กลับไปแก้ที่ New Job</text>
+    <rect x="330" y="254" width="60" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="360" y="263" fill="#6F8190" font-size="9" text-anchor="middle">ครบ</text>
+    <rect x="408" y="368" width="96" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="456" y="377" fill="#7F70EF" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">RUN = QUEUED</text>
+    <rect x="576" y="412" width="52" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="602" y="421" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">00:00</text>
+    <rect x="768" y="508" width="104" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="820" y="517" fill="#6F8190" font-size="9" text-anchor="middle">สรุปตอนเช้า</text>
+    <rect x="408" y="530" width="96" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="456" y="539" fill="#7F70EF" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">RUN.COMPLETED</text>
+    <rect x="496" y="680" width="104" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="548" y="689" fill="#7F70EF" font-size="9" font-weight="600" text-anchor="middle">มี — บล็อกทันที</text>
+    <rect x="780" y="752" width="64" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="812" y="761" fill="#7F70EF" font-size="9" font-weight="600" text-anchor="middle">กด Apply</text>
+    <rect x="928" y="540" width="24" height="120" rx="2" fill="#F8F9FB"/>
+    <text x="940" y="600" fill="#7F70EF" font-size="9" font-weight="600" text-anchor="middle" transform="rotate(90 940 600)">กด “ส่งตรวจสอบใหม่ (n)”</text>
+    <rect x="330" y="780" width="60" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="360" y="789" fill="#6F8190" font-size="9" text-anchor="middle">ไม่มี</text>
+    <rect x="528" y="852" width="48" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="552" y="861" fill="#6F8190" font-size="9" text-anchor="middle">มี</text>
+    <rect x="762" y="940" width="104" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="814" y="949" fill="#6F8190" font-size="9" text-anchor="middle">ยืนยัน + audit</text>
+    <rect x="330" y="932" width="60" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="360" y="941" fill="#6F8190" font-size="9" text-anchor="middle">ไม่มี</text>
+
+    <!-- ══ nodes ══ -->
+    <!-- start -->
+    <rect x="280" y="64" width="240" height="48" rx="24" fill="#F8F9FB"/>
+    <rect x="280" y="64" width="240" height="48" rx="24" fill="rgba(111,129,144,.10)" stroke="#A6B4BF" stroke-width="1"/>
+    <text x="400" y="86" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">เปิด Ad Validate พร้อม job context</text>
+    <text x="400" y="100" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">job_id · platform · account · website</text>
+
+    <!-- context decision -->
+    <polygon points="400,156 472,192 400,228 328,192" fill="#F8F9FB"/>
+    <polygon points="400,156 472,192 400,228 328,192" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="400" y="190" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">job context</text>
+    <text x="400" y="204" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">ครบและใช้ได้?</text>
+
+    <!-- blocked -->
+    <rect x="616" y="164" width="272" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="616" y="164" width="272" height="56" rx="6" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+    <rect x="624" y="172" width="44" height="12" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+    <text x="646" y="181" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">BLOCKED</text>
+    <text x="752" y="202" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">หยุด run — ไม่เริ่มสแกน</text>
+    <text x="752" y="214" fill="#6F8190" font-size="9" text-anchor="middle">เช่น account ไม่ตรง platform / credential ไม่มีสิทธิ์อ่าน</text>
+
+    <!-- ★ trigger (NEW) -->
+    <rect x="252" y="292" width="296" height="60" rx="6" fill="#F8F9FB"/>
+    <rect x="252" y="292" width="296" height="60" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <rect x="260" y="300" width="32" height="12" rx="2" fill="transparent" stroke="rgba(62,72,80,.40)" stroke-width=".8"/>
+    <text x="276" y="309" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">MCC</text>
+    <rect x="508" y="300" width="32" height="12" rx="2" fill="#7F70EF"/>
+    <text x="524" y="309" fill="#FFFFFF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">NEW</text>
+    <text x="400" y="328" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">กด “เริ่มตรวจ” / “ส่งตรวจสอบใหม่ (n)”</text>
+    <text x="400" y="342" fill="#6F8190" font-size="9" text-anchor="middle">confirm → สร้าง run ทันที · 1 job มี run ที่ active ได้ 1 run</text>
+
+    <!-- ★ background run (NEW, focal) -->
+    <rect x="228" y="396" width="344" height="124" rx="6" fill="#F8F9FB"/>
+    <rect x="228" y="396" width="344" height="124" rx="6" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <rect x="236" y="404" width="44" height="12" rx="2" fill="transparent" stroke="rgba(127,112,239,.55)" stroke-width=".8"/>
+    <text x="258" y="413" fill="#7F70EF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">WORKER</text>
+    <rect x="532" y="404" width="32" height="12" rx="2" fill="#7F70EF"/>
+    <text x="548" y="413" fill="#FFFFFF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">NEW</text>
+    <text x="400" y="424" fill="#3E4850" font-size="13" font-weight="600" text-anchor="middle">Background run — รันทั้งชุด</text>
+    <text x="252" y="446" fill="#3E4850" font-size="10">① <tspan font-weight="600">applying</tspan> <tspan fill="#6F8190">— ยิง draft ทั้งคิวไปที่ platform (ถ้ามี)</tspan></text>
+    <text x="252" y="464" fill="#3E4850" font-size="10">② <tspan font-weight="600">scanning</tspan> <tspan fill="#6F8190">— ดึง Ads API + crawl เว็บ / Tag health</tspan></text>
+    <text x="252" y="482" fill="#3E4850" font-size="10">③ <tspan font-weight="600">evaluating</tspan> <tspan fill="#6F8190">— ประเมิน rule ทั้งชุด (ไม่ใช่เฉพาะข้อ)</tspan></text>
+    <text x="252" y="500" fill="#3E4850" font-size="10">④ <tspan font-weight="600">completed</tspan> <tspan fill="#6F8190">— บันทึก findings + สรุปสิ่งที่เปลี่ยน</tspan></text>
+    <text x="252" y="514" fill="#A6B4BF" font-size="8" font-family="'Roboto Mono',monospace">draft ที่ยิงไม่สำเร็จ → กลับเข้าคิว · run = completed_with_errors</text>
+
+    <!-- side note: during run -->
+    <rect x="32" y="412" width="176" height="88" rx="6" fill="rgba(62,72,80,.02)" stroke="rgba(62,72,80,.30)" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="44" y="432" fill="#3E4850" font-size="11" font-weight="600">ระหว่างรัน</text>
+    <text x="44" y="450" fill="#6F8190" font-size="9">หน้านี้อ่านได้อย่างเดียว</text>
+    <text x="44" y="464" fill="#6F8190" font-size="9">Apply / ส่งตรวจ / ดำเนินการต่อ ถูกล็อก</text>
+    <text x="44" y="478" fill="#6F8190" font-size="9">ผลรอบก่อนแสดงแบบจางไว้</text>
+    <text x="44" y="492" fill="#6F8190" font-size="9">MCC ปิดหน้า / ไปทำงานอื่นได้</text>
+
+    <!-- cron (NEW behaviour) -->
+    <rect x="632" y="400" width="256" height="72" rx="6" fill="#F8F9FB"/>
+    <rect x="632" y="400" width="256" height="72" rx="6" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+    <rect x="640" y="408" width="36" height="12" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+    <text x="658" y="417" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">CRON</text>
+    <rect x="848" y="408" width="32" height="12" rx="2" fill="#7F70EF"/>
+    <text x="864" y="417" fill="#FFFFFF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">NEW</text>
+    <text x="760" y="438" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">00:00 · Full re-scan ทุกงานที่ค้าง</text>
+    <text x="760" y="452" fill="#6F8190" font-size="9" text-anchor="middle">ทุก job ที่ยังไม่ proceed · <tspan font-weight="600">ไม่ยิง draft</tspan></text>
+    <text x="760" y="464" fill="#6F8190" font-size="9" text-anchor="middle">ข้าม job ที่มี run ค้าง · draft ไม่ตรงต้นทาง → ติดป้าย</text>
+
+    <!-- ★ notify (NEW) -->
+    <rect x="252" y="556" width="296" height="60" rx="6" fill="#F8F9FB"/>
+    <rect x="252" y="556" width="296" height="60" rx="6" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+    <rect x="260" y="564" width="44" height="12" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+    <text x="282" y="573" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">NOTIFY</text>
+    <rect x="508" y="564" width="32" height="12" rx="2" fill="#7F70EF"/>
+    <text x="524" y="573" fill="#FFFFFF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">NEW</text>
+    <text x="400" y="592" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">แจ้งคนที่กด: “ตรวจเสร็จแล้ว”</text>
+    <text x="400" y="606" fill="#6F8190" font-size="9" text-anchor="middle">In-app (bell + toast) + LINE OA XPluser · Email ถ้า LINE ไม่สำเร็จ</text>
+
+    <!-- digest -->
+    <rect x="632" y="556" width="256" height="60" rx="6" fill="#F8F9FB"/>
+    <rect x="632" y="556" width="256" height="60" rx="6" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+    <rect x="640" y="564" width="44" height="12" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+    <text x="662" y="573" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">DIGEST</text>
+    <rect x="848" y="564" width="32" height="12" rx="2" fill="#7F70EF"/>
+    <text x="864" y="573" fill="#FFFFFF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">NEW</text>
+    <text x="760" y="592" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">08:30 · สรุปรวม 1 ข้อความ / MCC</text>
+    <text x="760" y="606" fill="#6F8190" font-size="9" text-anchor="middle">เฉพาะงานที่ผลเปลี่ยน หรือมี Critical ใหม่</text>
+
+    <!-- critical decision -->
+    <polygon points="400,660 480,700 400,740 320,700" fill="#F8F9FB"/>
+    <polygon points="400,660 480,700 400,740 320,700" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="400" y="698" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">มี Critical</text>
+    <text x="400" y="712" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">fail ค้างอยู่?</text>
+
+    <!-- fix (changed) -->
+    <rect x="612" y="664" width="280" height="76" rx="6" fill="#F8F9FB"/>
+    <rect x="612" y="664" width="280" height="76" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <rect x="620" y="672" width="28" height="12" rx="2" fill="transparent" stroke="rgba(62,72,80,.40)" stroke-width=".8"/>
+    <text x="634" y="681" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">FIX</text>
+    <text x="752" y="696" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">แก้ไขในหน้า Ad Validate</text>
+    <text x="752" y="712" fill="#6F8190" font-size="9" text-anchor="middle">Auto-fix / แก้ค่า API → <tspan fill="#7F70EF" font-weight="600">Apply = เก็บเป็น draft</tspan></text>
+    <text x="752" y="726" fill="#6F8190" font-size="9" text-anchor="middle">แก้นอกระบบ → กดส่งตรวจใหม่ · Exception → บันทึกทันที</text>
+
+    <!-- ★ queue (NEW) -->
+    <rect x="612" y="776" width="276" height="64" rx="6" fill="#F8F9FB"/>
+    <rect x="612" y="776" width="276" height="64" rx="6" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <rect x="620" y="784" width="40" height="12" rx="2" fill="transparent" stroke="rgba(127,112,239,.55)" stroke-width=".8"/>
+    <text x="640" y="793" fill="#7F70EF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">DRAFT</text>
+    <rect x="848" y="784" width="32" height="12" rx="2" fill="#7F70EF"/>
+    <text x="864" y="793" fill="#FFFFFF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">NEW</text>
+    <text x="750" y="814" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">คิวรอส่งตรวจ (n รายการ)</text>
+    <text x="750" y="830" fill="#6F8190" font-size="9" text-anchor="middle">ยังไม่แตะ platform · แก้ / ยกเลิก draft ได้ · ไม่นับเป็น Pass</text>
+
+    <!-- warning decision -->
+    <polygon points="400,836 488,872 400,908 312,872" fill="#F8F9FB"/>
+    <polygon points="400,836 488,872 400,908 312,872" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="400" y="870" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">เหลือ Warning</text>
+    <text x="400" y="884" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">หรือ Manual?</text>
+
+    <!-- approval -->
+    <rect x="612" y="852" width="280" height="48" rx="6" fill="#F8F9FB"/>
+    <rect x="612" y="852" width="280" height="48" rx="6" fill="rgba(62,72,80,.02)" stroke="rgba(62,72,80,.30)" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="752" y="874" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">ผู้มีสิทธิ์ยืนยันข้าม</text>
+    <text x="752" y="889" fill="#6F8190" font-size="9" text-anchor="middle">Reviewer / Lead เท่านั้น · บันทึก audit event</text>
+
+    <!-- end -->
+    <rect x="244" y="968" width="312" height="56" rx="28" fill="#F8F9FB"/>
+    <rect x="244" y="968" width="312" height="56" rx="28" fill="rgba(111,129,144,.10)" stroke="#A6B4BF" stroke-width="1"/>
+    <text x="400" y="992" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">Validation completed → ส่ง outcome กลับ New Job</text>
+    <text x="400" y="1008" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">กด “ดำเนินการต่อ” ได้เมื่อไม่มี run ค้าง + ไม่มี draft ค้าง</text>
+
+    <!-- legend -->
+    <line x1="32" y1="1064" x2="928" y2="1064" stroke="rgba(62,72,80,.10)" stroke-width=".8"/>
+    <text x="32" y="1088" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".14em">LEGEND</text>
+    <rect x="116" y="1080" width="20" height="10" rx="5" fill="rgba(111,129,144,.10)" stroke="#A6B4BF" stroke-width="1"/>
+    <text x="144" y="1088" fill="#6F8190" font-size="9">เริ่ม / จบ</text>
+    <rect x="232" y="1080" width="20" height="10" rx="3" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="260" y="1088" fill="#6F8190" font-size="9">ผู้ใช้ทำ</text>
+    <rect x="336" y="1080" width="20" height="10" rx="3" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+    <text x="364" y="1088" fill="#6F8190" font-size="9">ระบบทำ</text>
+    <rect x="440" y="1080" width="20" height="10" rx="3" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="468" y="1088" fill="#6F8190" font-size="9">จุดหลักของ v2 / gate</text>
+    <rect x="588" y="1080" width="24" height="10" rx="2" fill="#7F70EF"/>
+    <text x="620" y="1088" fill="#6F8190" font-size="9">ใหม่ใน v2</text>
+    <line x1="692" y1="1085" x2="728" y2="1085" stroke="#7F70EF" stroke-width="1.4" stroke-dasharray="6,4"/>
+    <text x="736" y="1088" fill="#6F8190" font-size="9">วนส่งตรวจใหม่</text>
+    <line x1="820" y1="1085" x2="856" y2="1085" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4"/>
+    <text x="864" y="1088" fill="#6F8190" font-size="9">ย้อนกลับ</text>
+  </svg>
+  </div>
+
+  <p class="aside">จุดที่ต้องระวังตอน implement: กดซ้ำ / request ถูกยิงซ้ำ ต้องได้ run เดิม (idempotency key = job_id + draft set hash) · ถ้า cron กำลังรันอยู่แล้วผู้ใช้กดส่งตรวจ รอบของผู้ใช้เข้าคิวต่อท้าย ไม่ยกเลิกรอบ cron</p>
+</section>
+
+<!-- ═══════════════════ 02b · RUN LIFECYCLE (NEW) ═══════════════════ -->
+<section id="run">
+  <div class="eyebrow">02b / State machine · NEW</div>
+  <h2>Run lifecycle — สถานะของรอบตรวจ</h2>
+  <p class="note">run คือหน่วยงานของ worker แยกจาก gate status (<code>blocked</code> / <code>passed_with_warnings</code> / <code>passed</code>) ซึ่งยังคำนวณจาก run ล่าสุดที่ completed เหมือนเดิม ระหว่างที่ run ยัง active อยู่ (queued → evaluating) ปุ่มดำเนินการต่อถูกล็อกจาก backend</p>
+
+  <div class="figure">
+  <svg width="960" height="272" viewBox="0 0 960 272" role="img" aria-labelledby="run-title run-desc">
+    <title id="run-title">State machine ของ validation run</title>
+    <desc id="run-desc">run เริ่มที่ queued แล้วไป applying ถ้ามี draft หรือข้ามไป scanning ถ้าไม่มี จากนั้น evaluating แล้วจบเป็น completed หรือ completed_with_errors เมื่อ draft บางรายการยิงไม่สำเร็จ หรือ failed เมื่อ connector ล้มหลัง retry ครบ ทุกสถานะที่จบแล้วจะส่ง notification</desc>
+    <defs>
+      <marker id="r-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6F8190"/></marker>
+      <marker id="r-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7F70EF"/></marker>
+    </defs>
+    <rect width="960" height="272" fill="#F8F9FB"/>
+
+    <line x1="152" y1="88" x2="196" y2="88" stroke="#6F8190" stroke-width="1.2" marker-end="url(#r-arrow)"/>
+    <line x1="320" y1="88" x2="364" y2="88" stroke="#6F8190" stroke-width="1.2" marker-end="url(#r-arrow)"/>
+    <path d="M 92,112 V 144 Q 92,152 100,152 H 420 Q 428,152 428,144 V 116" fill="none" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#r-arrow)"/>
+    <line x1="488" y1="88" x2="532" y2="88" stroke="#6F8190" stroke-width="1.2" marker-end="url(#r-arrow)"/>
+    <line x1="656" y1="88" x2="700" y2="88" stroke="#6F8190" stroke-width="1.2"/>
+    <path d="M 700,88 V 48 Q 700,40 708,40 H 736" fill="none" stroke="#7F70EF" stroke-width="1.4" marker-end="url(#r-arrow-accent)"/>
+    <path d="M 700,88 V 96 H 736" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#r-arrow)"/>
+    <path d="M 700,88 V 144 Q 700,152 708,152 H 736" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#r-arrow)"/>
+
+    <rect x="160" y="140" width="120" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="220" y="149" fill="#6F8190" font-size="9" text-anchor="middle">ไม่มี draft → ข้าม</text>
+
+    <!-- states -->
+    <rect x="32" y="64" width="120" height="48" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="92" y="86" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle" font-family="'Roboto Mono',monospace">queued</text>
+    <text x="92" y="101" fill="#6F8190" font-size="9" text-anchor="middle">รอ worker</text>
+
+    <rect x="200" y="64" width="120" height="48" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="260" y="86" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle" font-family="'Roboto Mono',monospace">applying</text>
+    <text x="260" y="101" fill="#6F8190" font-size="9" text-anchor="middle">ยิง draft ทีละรายการ</text>
+
+    <rect x="368" y="64" width="120" height="48" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="428" y="86" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle" font-family="'Roboto Mono',monospace">scanning</text>
+    <text x="428" y="101" fill="#6F8190" font-size="9" text-anchor="middle">Ads API + crawl</text>
+
+    <rect x="536" y="64" width="120" height="48" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="596" y="86" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle" font-family="'Roboto Mono',monospace">evaluating</text>
+    <text x="596" y="101" fill="#6F8190" font-size="9" text-anchor="middle">rule ทั้งชุด</text>
+
+    <rect x="740" y="20" width="188" height="40" rx="20" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="834" y="38" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle" font-family="'Roboto Mono',monospace">completed</text>
+    <text x="834" y="52" fill="#6F8190" font-size="9" text-anchor="middle">ครบทุกขั้น</text>
+
+    <rect x="740" y="76" width="188" height="40" rx="20" fill="rgba(255,168,0,.10)" stroke="#FFA800" stroke-width="1.2"/>
+    <text x="834" y="94" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle" font-family="'Roboto Mono',monospace">completed_with_errors</text>
+    <text x="834" y="108" fill="#6F8190" font-size="9" text-anchor="middle">draft บางข้อพลาด → กลับเข้าคิว</text>
+
+    <rect x="740" y="132" width="188" height="40" rx="20" fill="rgba(245,48,58,.08)" stroke="#F5303A" stroke-width="1.2"/>
+    <text x="834" y="150" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle" font-family="'Roboto Mono',monospace">failed</text>
+    <text x="834" y="164" fill="#6F8190" font-size="9" text-anchor="middle">connector ล้มหลัง retry ครบ</text>
+
+    <line x1="32" y1="204" x2="928" y2="204" stroke="rgba(62,72,80,.10)" stroke-width=".8"/>
+    <text x="32" y="228" fill="#6F8190" font-size="10">ทุกสถานะปลายทาง → ส่ง event <tspan font-family="'Roboto Mono',monospace" fill="#283DD7">run.finished</tspan> ให้ Notification service · run ที่ trigger = cron ไม่แจ้งทันที แต่ไปรวมใน digest 08:30</text>
+    <text x="32" y="248" fill="#6F8190" font-size="10"><tspan font-weight="600" fill="#3E4850">failed</tspan> ไม่เปลี่ยน gate — ยังใช้ผลจาก run ล่าสุดที่ completed · draft ทั้งหมดยังอยู่ในคิว</text>
+  </svg>
+  </div>
+
+  <table>
+    <thead><tr><th>ประเด็น</th><th>รอบที่ผู้ใช้กดเอง</th><th>Cron 00:00</th></tr></thead>
+    <tbody>
+      <tr><td><b>ขอบเขต</b></td><td>job เดียว · rule ทั้งชุด</td><td>ทุก job ที่อยู่ในขั้น Validate และยังไม่ proceed</td></tr>
+      <tr><td><b>ยิง draft</b></td><td>ยิงทั้งคิวก่อน scan</td><td><b>ไม่ยิง</b> · draft คงอยู่ ถ้าค่าต้นทางเปลี่ยนจะติดป้าย “ค่าต้นทางเปลี่ยน”</td></tr>
+      <tr><td><b>ชนกับ run ที่ active</b></td><td>รอบใหม่เข้าคิวต่อท้าย (ห้ามมี active 2 run ใน job เดียว)</td><td>ข้าม job นั้นไป</td></tr>
+      <tr><td><b>แจ้งเตือน</b></td><td>ทันที ถึงคนที่กด (In-app + LINE, Email สำรอง)</td><td>Digest 08:30 ถึง MCC เจ้าของงาน · เฉพาะงานที่ผลเปลี่ยน / Critical ใหม่</td></tr>
+      <tr><td><b>Scan expiry (FR-06)</b></td><td colspan="2">ผลจาก cron ทำให้ผลตรวจสดใหม่ทุกวัน · ต้องตกลงกับ Tech Lead ว่าผล cron นับเป็น “scan ล่าสุด” สำหรับ proceed หรือไม่ (open decision)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════ 02c · NOTIFY (NEW) ═══════════════════ -->
+<section id="notify">
+  <div class="eyebrow">02c / Notification matrix · NEW</div>
+  <h2>ใครได้รับแจ้ง เมื่อไร และช่องทางไหน</h2>
+  <p class="note">LINE OA <b>XPluser</b> ใช้ API ภายในที่มี mapping พนักงาน ↔ LINE userId อยู่แล้ว · Email จะส่งเมื่อ user ยังไม่ผูก LINE หรือส่ง LINE ไม่สำเร็จ (ไม่ส่งซ้ำทั้งสองช่องทาง) · In-app ส่งทุกครั้ง</p>
+  <table>
+    <thead><tr><th>Event</th><th>ผู้รับ</th><th>In-app</th><th>LINE XPluser</th><th>Email</th><th>เนื้อหาหลัก</th></tr></thead>
+    <tbody>
+      <tr><td><b>run.completed</b> (user)</td><td>คนที่กด</td><td>bell + toast</td><td>✓ หลัก</td><td>สำรอง</td><td>ชื่องาน · ผ่าน / Critical n / Warning n · ปุ่ม “เปิดผลตรวจ”</td></tr>
+      <tr><td><b>run.completed_with_errors</b></td><td>คนที่กด</td><td>bell + toast</td><td>✓ หลัก</td><td>สำรอง</td><td>+ “ส่งการแก้ไขไม่สำเร็จ x รายการ กลับเข้าคิวแล้ว” พร้อมสาเหตุ</td></tr>
+      <tr><td><b>run.failed</b></td><td>คนที่กด</td><td>bell + toast</td><td>✓ หลัก</td><td>สำรอง</td><td>สาเหตุที่แก้ได้ (token / permission / เว็บเข้าไม่ได้) · ปุ่ม “ลองใหม่”</td></tr>
+      <tr><td><b>cron digest</b></td><td>MCC เจ้าของงาน</td><td>bell</td><td>✓ หลัก</td><td>สำรอง</td><td>08:30 · รวมทุกงานที่ผลเปลี่ยน / Critical ใหม่ / draft ค่าต้นทางเปลี่ยน</td></tr>
+    </tbody>
+  </table>
+  <p class="aside">ถ้าคนที่กดไม่ใช่ MCC เจ้าของงาน ให้ส่งถึง MCC เจ้าของงานด้วย (ในแบบ In-app เท่านั้น) เพื่อไม่ให้เจ้าของงานพลาดว่ามีคนส่งตรวจแทน — เป็นข้อเสนอที่ต้องยืนยันใน design spec</p>
+</section>
+
+<!-- ═══════════════════ 02 · GATE ═══════════════════ -->
+<section id="gate">
+  <div class="eyebrow">03 / Flowchart</div>
+  <h2>Gate logic — อะไรตัดสินว่าปุ่ม “ดำเนินการต่อ” กดได้</h2>
+  <p class="note">Logic นี้ถอดมาจาก <code>vGate()</code> ใน prototype และต้องถูกบังคับที่ <b>backend</b> ไม่ใช่แค่ซ่อนปุ่มใน UI (PRD FR-06) · เงื่อนไขทุกข้อถูกกรองด้วย <code>vActiveChecks()</code> ก่อน — rule ที่มี <code>visibleIf</code> แล้ว dependency ยังไม่ผ่าน จะไม่ถูกนับในทุกกรณี</p>
+
+  <div class="figure">
+  <svg width="960" height="720" viewBox="0 0 960 720" role="img" aria-labelledby="gate-title gate-desc">
+    <title id="gate-title">Gate logic ของ Ad Validate</title>
+    <desc id="gate-desc">Flowchart แสดงว่า gate คืนค่าสถานะใด — ถ้ายังไม่เคยรัน scan ได้ not_run, ถ้ามี finding ที่ fail และ severity เป็น critical ได้ blocked, ถ้ายังเหลือ fail หรือ manual อื่นได้ warnings, นอกนั้นได้ passed</desc>
+
+    <defs>
+      <marker id="g-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6F8190"/></marker>
+      <marker id="g-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7F70EF"/></marker>
+    </defs>
+    <rect width="960" height="720" fill="#F8F9FB"/>
+
+    <line x1="360" y1="112" x2="360" y2="148" stroke="#6F8190" stroke-width="1.2" marker-end="url(#g-arrow)"/>
+    <line x1="436" y1="184" x2="608" y2="184" stroke="#6F8190" stroke-width="1.2" marker-end="url(#g-arrow)"/>
+    <line x1="360" y1="220" x2="360" y2="284" stroke="#6F8190" stroke-width="1.2" marker-end="url(#g-arrow)"/>
+    <line x1="444" y1="320" x2="608" y2="320" stroke="#7F70EF" stroke-width="1.6" marker-end="url(#g-arrow-accent)"/>
+    <line x1="360" y1="356" x2="360" y2="420" stroke="#6F8190" stroke-width="1.2" marker-end="url(#g-arrow)"/>
+    <line x1="452" y1="456" x2="608" y2="456" stroke="#6F8190" stroke-width="1.2" marker-end="url(#g-arrow)"/>
+    <path d="M 360,492 V 584 Q 360,592 368,592 H 608" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#g-arrow)"/>
+
+    <rect x="496" y="164" width="52" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="522" y="173" fill="#6F8190" font-size="9" text-anchor="middle">ยัง</text>
+    <rect x="288" y="246" width="62" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="319" y="255" fill="#6F8190" font-size="9" text-anchor="middle">รันแล้ว</text>
+    <rect x="502" y="300" width="48" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="526" y="309" fill="#7F70EF" font-size="9" font-weight="600" text-anchor="middle">มี</text>
+    <rect x="288" y="382" width="62" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="319" y="391" fill="#6F8190" font-size="9" text-anchor="middle">ไม่มี</text>
+    <rect x="506" y="436" width="48" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="530" y="445" fill="#6F8190" font-size="9" text-anchor="middle">มี</text>
+    <rect x="256" y="534" width="94" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="303" y="543" fill="#6F8190" font-size="9" text-anchor="middle">ไม่เหลือเลย</text>
+
+    <rect x="248" y="64" width="224" height="48" rx="24" fill="#F8F9FB"/>
+    <rect x="248" y="64" width="224" height="48" rx="24" fill="rgba(111,129,144,.10)" stroke="#A6B4BF" stroke-width="1"/>
+    <text x="360" y="86" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">ประเมิน active checks</text>
+    <text x="360" y="100" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">หลังกรอง visibleIf แล้ว</text>
+
+    <polygon points="360,148 436,184 360,220 284,184" fill="#F8F9FB"/>
+    <polygon points="360,148 436,184 360,220 284,184" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="360" y="182" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">เคยรัน scan</text>
+    <text x="360" y="196" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">แล้วหรือยัง?</text>
+
+    <rect x="608" y="156" width="304" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="608" y="156" width="304" height="56" rx="6" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+    <text x="760" y="184" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">not_run</text>
+    <text x="760" y="200" fill="#6F8190" font-size="9" text-anchor="middle">ปุ่มถูกปิด · ต้องมีผล scan ล่าสุดก่อนเสมอ</text>
+
+    <polygon points="360,284 444,320 360,356 276,320" fill="#F8F9FB"/>
+    <polygon points="360,284 444,320 360,356 276,320" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="360" y="318" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">มี fail ที่</text>
+    <text x="360" y="332" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">severity = crit?</text>
+
+    <rect x="608" y="292" width="304" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="608" y="292" width="304" height="56" rx="6" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="760" y="320" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">blocked</text>
+    <text x="760" y="336" fill="#6F8190" font-size="9" text-anchor="middle">backend ปฏิเสธ proceed · ไม่มี override ใน UI</text>
+
+    <polygon points="360,420 452,456 360,492 268,456" fill="#F8F9FB"/>
+    <polygon points="360,420 452,456 360,492 268,456" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="360" y="454" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">ยังเหลือ fail</text>
+    <text x="360" y="468" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">หรือ manual?</text>
+
+    <rect x="608" y="428" width="304" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="608" y="428" width="304" height="56" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="760" y="456" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">passed_with_warnings</text>
+    <text x="760" y="472" fill="#6F8190" font-size="9" text-anchor="middle">กดต่อได้เมื่อยืนยัน · ต้องมี actor + reason + timestamp</text>
+
+    <rect x="608" y="564" width="304" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="608" y="564" width="304" height="56" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="760" y="592" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">passed</text>
+    <text x="760" y="608" fill="#6F8190" font-size="9" text-anchor="middle">ผ่านครบทุกเงื่อนไขที่เกี่ยวข้องกับงานนี้</text>
+
+    <line x1="32" y1="660" x2="928" y2="660" stroke="rgba(62,72,80,.10)" stroke-width=".8"/>
+    <text x="32" y="680" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".14em">LEGEND</text>
+    <polygon points="132,672 148,677 132,682 116,677" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="156" y="680" fill="#6F8190" font-size="9">จุดตัดสิน</text>
+    <polygon points="268,672 284,677 268,682 252,677" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="292" y="680" fill="#6F8190" font-size="9">เงื่อนไขที่บล็อกงาน</text>
+    <rect x="452" y="672" width="20" height="10" rx="3" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="480" y="680" fill="#6F8190" font-size="9">สถานะที่ส่งกลับ New Job</text>
+    <rect x="684" y="672" width="20" height="10" rx="3" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+    <text x="712" y="680" fill="#6F8190" font-size="9">สถานะภายใน ยังไม่ส่งออก</text>
+  </svg>
+  </div>
+
+  <table>
+    <thead><tr><th style="width:170px">Gate status</th><th style="width:130px">ปุ่มดำเนินการต่อ</th><th>เงื่อนไขและสิ่งที่ระบบต้องทำ</th></tr></thead>
+    <tbody>
+      <tr><td><code>not_run</code></td><td><b>ปิด</b></td><td>ยังไม่มีผล scan หรือผลหมดอายุ — PRD เสนอ scan expiry เริ่มต้น 24 ชม. (ยังรอยืนยันกับ Tech Lead)</td></tr>
+      <tr><td><code>blocked</code></td><td><b>ปิด</b></td><td>มี active finding ที่ <code>state = fail</code> และ <code>sev = crit</code> อย่างน้อย 1 ข้อ · ต้องปฏิเสธที่ backend policy ไม่ใช่แค่ disable ปุ่ม</td></tr>
+      <tr><td><code>passed_with_warnings</code></td><td>เปิดเมื่อยืนยัน</td><td>ไม่มี Critical แล้ว แต่ยังเหลือ <code>fail</code> (warn/info) หรือ <code>manual</code> · ต้องมี confirmation + audit event พร้อม actor, reason, timestamp</td></tr>
+      <tr><td><code>passed</code></td><td>เปิด</td><td>active checks ทุกข้อเป็น <code>pass</code> หรือ <code>na</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════ 03 · P-027 ═══════════════════ -->
+<section id="p027">
+  <div class="eyebrow">04 / Flowchart</div>
+  <h2>P-027 · Conversion Tag Method — เงื่อนไขที่เข้มที่สุด</h2>
+  <p class="note">ชื่อ rule บอกว่า “ตรวจ 2 จุด” — <b>จุดที่ 1</b> คือระบบตรวจแหล่งที่มาอัตโนมัติจากลายเซ็นใน Google Ads API (ตรงกับ Plus AdTech หรือไม่ ถ้าไม่ตรงระบบจะสันนิษฐานไว้ก่อนว่าเป็น GTM) และ <b>จุดที่ 2</b> คือผู้ใช้ต้องเลือกยืนยันเองว่าสร้างจากเครื่องมือไหนจริง — ดูรายละเอียดเต็มที่ <a href="rule-set.html#P-027" style="color:#283DD7">rule set reference</a> · เงื่อนไขนี้ออกแบบมาเพื่อกันไม่ให้ใครพิมพ์เหตุผลแล้วกดผ่านโดยไม่มีผลตรวจจริงมารองรับ — ทางออก “ยืนยันเหตุผล” ของจุดที่ 2 <b>มีอยู่เฉพาะตอนที่จุดที่ 1 เจอสัญญาณจริงเท่านั้น</b> ถ้าไม่เจอสัญญาณเลย ไม่มีทางข้าม ต้องแก้การติดตั้งก่อนเท่านั้น · <a href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-027" style="color:#283DD7">เปิดเงื่อนไขนี้ใน Prototype ↗</a></p>
+
+  <div class="figure">
+  <svg width="960" height="736" viewBox="0 0 960 736" role="img" aria-labelledby="p027-title p027-desc">
+    <title id="p027-title">Decision tree ของเงื่อนไข P-027</title>
+    <desc id="p027-desc">Flowchart ของกฎ P-027 Conversion Tag Method แบ่งเป็นสองจุด — จุดที่หนึ่งระบบตรวจแหล่งที่มาอัตโนมัติจาก Google Ads Manager ว่า conversion ที่กำลังทำงานตรงกับลายเซ็นของ Plus AdTech หรือไม่ ถ้าไม่ตรงจะสันนิษฐานว่าเป็น GTM จุดที่สองคือผู้ใช้ต้องเลือกยืนยันเองว่าสร้างจากเครื่องมือใดจริงพร้อมเหตุผลจึงจะผ่าน แต่ถ้าจุดที่หนึ่งไม่พบสัญญาณใดเลยจะถูกบล็อกโดยไม่มีทางข้ามไปจุดที่สอง</desc>
+
+    <defs>
+      <marker id="p-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6F8190"/></marker>
+      <marker id="p-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7F70EF"/></marker>
+    </defs>
+    <rect width="960" height="736" fill="#F8F9FB"/>
+
+    <rect x="236" y="262" width="228" height="242" rx="8" fill="rgba(127,112,239,.04)" stroke="rgba(127,112,239,.45)" stroke-width="1" stroke-dasharray="4,4"/>
+    <rect x="252" y="266" width="196" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="350" y="275" fill="#7F70EF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".1em">จุดที่ 1 — ตรวจแหล่งที่มาอัตโนมัติ</text>
+
+    <line x1="352" y1="112" x2="352" y2="148" stroke="#6F8190" stroke-width="1.2" marker-end="url(#p-arrow)"/>
+    <line x1="440" y1="184" x2="608" y2="184" stroke="#6F8190" stroke-width="1.2" marker-end="url(#p-arrow)"/>
+    <line x1="352" y1="220" x2="352" y2="284" stroke="#6F8190" stroke-width="1.2" marker-end="url(#p-arrow)"/>
+    <line x1="448" y1="320" x2="608" y2="320" stroke="#6F8190" stroke-width="1.2" marker-end="url(#p-arrow)"/>
+    <line x1="352" y1="356" x2="352" y2="420" stroke="#6F8190" stroke-width="1.2" marker-end="url(#p-arrow)"/>
+    <line x1="444" y1="456" x2="608" y2="456" stroke="#6F8190" stroke-width="1.2" marker-end="url(#p-arrow)"/>
+    <path d="M 352,492 V 596 Q 352,604 360,604 H 608" fill="none" stroke="#7F70EF" stroke-width="1.6" marker-end="url(#p-arrow-accent)"/>
+
+    <rect x="498" y="164" width="52" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="524" y="173" fill="#6F8190" font-size="9" text-anchor="middle">ยัง</text>
+    <rect x="258" y="246" width="84" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="300" y="255" fill="#6F8190" font-size="9" text-anchor="middle">ตรวจแล้ว</text>
+    <rect x="502" y="300" width="52" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="528" y="309" fill="#6F8190" font-size="9" text-anchor="middle">พบ</text>
+    <rect x="268" y="382" width="74" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="305" y="391" fill="#6F8190" font-size="9" text-anchor="middle">ไม่พบ</text>
+    <rect x="490" y="436" width="72" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="526" y="445" fill="#6F8190" font-size="9" text-anchor="middle">พบเจ้าอื่น</text>
+    <rect x="250" y="538" width="92" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="296" y="547" fill="#7F70EF" font-size="9" font-weight="600" text-anchor="middle">ไม่พบอะไรเลย</text>
+
+    <rect x="232" y="64" width="240" height="48" rx="24" fill="#F8F9FB"/>
+    <rect x="232" y="64" width="240" height="48" rx="24" fill="rgba(111,129,144,.10)" stroke="#A6B4BF" stroke-width="1"/>
+    <text x="352" y="86" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">P-027 · Conversion Tag Method</text>
+    <text x="352" y="100" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">severity: crit · check: semi-auto</text>
+
+    <polygon points="352,148 440,184 352,220 264,184" fill="#F8F9FB"/>
+    <polygon points="352,148 440,184 352,220 264,184" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="352" y="182" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">กดตรวจกับ Google</text>
+    <text x="352" y="196" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">Ads Manager แล้ว?</text>
+
+    <rect x="608" y="156" width="304" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="608" y="156" width="304" height="56" rx="6" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+    <text x="760" y="184" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">fail · ผ่าน 0 / 2</text>
+    <text x="760" y="200" fill="#6F8190" font-size="9" text-anchor="middle">ล็อกไม่ให้เลือกวิธีติด Tag เองจนกว่าจะเห็นผลตรวจจริง</text>
+
+    <polygon points="352,284 448,320 352,356 256,320" fill="#F8F9FB"/>
+    <polygon points="352,284 448,320 352,356 256,320" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="352" y="318" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">พบ conversion ของ</text>
+    <text x="352" y="332" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">Plus AdTech ที่ firing?</text>
+
+    <rect x="608" y="292" width="304" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="608" y="292" width="304" height="56" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="760" y="320" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">pass อัตโนมัติ</text>
+    <text x="760" y="336" fill="#6F8190" font-size="9" text-anchor="middle">ปลดล็อก P-028 (ตรวจ Plus AdTech ชนกับ GTM) ต่อทันที</text>
+
+    <polygon points="352,420 444,456 352,492 260,456" fill="#F8F9FB"/>
+    <polygon points="352,420 444,456 352,492 260,456" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="352" y="454" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">พบ tracking เจ้าอื่น</text>
+    <text x="352" y="468" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">ที่กำลัง firing?</text>
+
+    <rect x="608" y="428" width="304" height="64" rx="6" fill="#F8F9FB"/>
+    <rect x="608" y="428" width="304" height="64" rx="6" fill="rgba(62,72,80,.02)" stroke="rgba(62,72,80,.30)" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="760" y="456" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">จุดที่ 2 — pass ได้เมื่อยืนยัน</text>
+    <text x="760" y="472" fill="#6F8190" font-size="9" text-anchor="middle">ผู้ใช้เลือกเครื่องมือที่ใช้จริง (ระบบเสนอ GTM ไว้ก่อน) + เหตุผล</text>
+    <text x="760" y="484" fill="#6F8190" font-size="9" text-anchor="middle">อ้างอิง conversion ที่ Inspector เจอจริง · เก็บเป็น audit</text>
+
+    <rect x="608" y="572" width="304" height="64" rx="6" fill="#F8F9FB"/>
+    <rect x="608" y="572" width="304" height="64" rx="6" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="760" y="600" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">บล็อก — ไม่มีทางข้าม</text>
+    <text x="760" y="616" fill="#6F8190" font-size="9" text-anchor="middle">ไม่มีปุ่มยืนยันให้กด · ไม่รับ exception</text>
+    <text x="760" y="628" fill="#6F8190" font-size="9" text-anchor="middle">ต้องแก้การติดตั้งให้มีสัญญาณจริงก่อนเท่านั้น</text>
+
+    <line x1="32" y1="676" x2="928" y2="676" stroke="rgba(62,72,80,.10)" stroke-width=".8"/>
+    <text x="32" y="696" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".14em">LEGEND</text>
+    <rect x="116" y="688" width="20" height="10" rx="3" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="144" y="696" fill="#6F8190" font-size="9">ผลลัพธ์ปกติ</text>
+    <rect x="256" y="688" width="20" height="10" rx="3" fill="rgba(62,72,80,.02)" stroke="rgba(62,72,80,.30)" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="284" y="696" fill="#6F8190" font-size="9">ผ่านได้เมื่อมีเหตุผล + audit</text>
+    <rect x="492" y="688" width="20" height="10" rx="3" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="520" y="696" fill="#6F8190" font-size="9">hard block — ไม่มี bypass</text>
+    <rect x="728" y="688" width="20" height="10" rx="3" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+    <text x="756" y="696" fill="#6F8190" font-size="9">ยังตรวจไม่ครบ</text>
+  </svg>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <p class="eyebrow">Conditional rule</p>
+      <div class="card-header"><span class="card-dot dot-accent"></span><h3>P-028 ขึ้นกับ P-027</h3></div>
+      <ul>
+        <li>P-028 จะถูกประเมิน<b>ก็ต่อเมื่อ</b> P-027 <code>state = pass</code> <b>และ</b> <code>trackingMethod = adtech</code></li>
+        <li>ถ้าทีมยืนยันใช้ GTM Manual แทน P-028 จะไม่ปรากฏและไม่ถูกนับใน gate</li>
+        <li>Rule ที่ไม่ผ่าน <code>visibleIf</code> ต้องไม่นับเป็น fail และไม่นับเป็น pass — มันไม่อยู่ใน run นี้</li>
+      </ul>
+    </div>
+    <div class="card">
+      <p class="eyebrow">Remediation</p>
+      <div class="card-header"><span class="card-dot dot-link"></span><h3>สามทางแก้</h3></div>
+      <ul>
+        <li><code>auto_fix</code> — ระบบ preview การเปลี่ยนแปลง แล้วยิง platform mutation หลังผู้ใช้ยืนยัน</li>
+        <li><code>external_fix</code> — เปิด deep link ไป Ads Manager / GTM แล้วให้ผู้ใช้สั่ง re-scan เอง</li>
+        <li><code>exception</code> — ต้องมี permission + เหตุผล + หลักฐานจากผลตรวจจริง</li>
+      </ul>
+    </div>
+    <div class="card">
+      <p class="eyebrow">Edge cases</p>
+      <div class="card-header"><span class="card-dot dot-ink"></span><h3>ต้องออกแบบรองรับ</h3></div>
+      <ul>
+        <li>Mutation สำเร็จแต่ re-scan ยังเห็นค่าเดิม (eventual consistency)</li>
+        <li>ผู้ใช้สองคนแก้ finding เดียวกันพร้อมกัน</li>
+        <li>Rule set ถูก publish ใหม่ระหว่าง run — run เดิมต้องยึด version เดิม</li>
+        <li>Upstream job ถูกยกเลิกขณะกำลัง scan</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ 04 · RULES ═══════════════════ -->
+<section id="rules">
+  <div class="eyebrow">05 / Reference</div>
+  <h2>Severity policy และ rule inventory</h2>
+  <p class="note">ทั้งสาม platform ใช้โครง severity และหมวดเดียวกัน ต่างกันที่ชุด rule · หน้านี้เป็นสรุป — <a href="rule-set.html" style="color:#283DD7"><b>ดูรายละเอียดรายข้อทั้ง 39 ข้อได้ที่ Rule set reference</b></a> ซึ่งบอกว่าแต่ละข้อตรวจอย่างไร ดึง API หรือสแกนหน้าเว็บ และถ้าไม่ผ่านต้องแก้แบบไหน · ชุดที่แสดงด้านล่างคือชุดที่มีอยู่ใน prototype ซึ่ง PRD ระบุว่าต้อง review แยกจาก UI ก่อนขึ้น production เพราะมีทั้ง mock data และ presentation scenario ปนอยู่</p>
+
+  <table>
+    <thead><tr><th style="width:150px">Severity</th><th style="width:150px">ผลต่อ gate</th><th>นิยามและสิ่งที่ต้องบังคับ</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sev s-crit"></span><b>Critical</b></td><td><b>บล็อก proceed</b></td><td>ถ้าไม่แก้ = ออนไลน์ไม่ได้ · backend ต้องปฏิเสธ ไม่ใช่แค่ disable ปุ่ม</td></tr>
+      <tr><td><span class="sev s-warn"></span><b>Warning</b></td><td>ผ่านได้เมื่อยืนยัน</td><td>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมี actor, reason, timestamp ใน audit</td></tr>
+      <tr><td><span class="sev s-info"></span><b>Info</b></td><td>ไม่บล็อก</td><td>แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น</td></tr>
+      <tr><td><span class="sev s-man"></span><b>Manual</b></td><td>นับเป็นค้าง</td><td>ต้องมีคนตรวจหรือมีหลักฐานแนบ · ถูกนับรวมกับ Warning ในการตัดสิน gate</td></tr>
+      <tr><td><span class="sev s-na"></span><b>Not applicable</b></td><td>ไม่นับ</td><td>ไม่เกี่ยวกับงานนี้ (เช่น rule เฉพาะ Display เมื่องานเป็น Search ล้วน) · ไม่นับเป็น fail</td></tr>
+    </tbody>
+  </table>
+
+  <table>
+    <thead><tr><th style="width:150px">Platform</th><th style="width:120px">Prefix</th><th>ขอบเขต rule จาก prototype</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>Google Ads</b><br><code>google-1.0.0</code><br><a href="rule-set.html#google">ดูรายข้อ →</a></td>
+        <td><code>P-001 … P-028</code><br>17 ข้อ · <b>Phase 1</b></td>
+        <td>Auto-apply recommendations · conversion method และ conversion activity · primary/secondary conversion · location, location option, language · assets และ ad strength · negative keywords และ network settings · mobile-app exclusion สำหรับ Display/YouTube · Google Ads tag, GA4 tag, Plus AdTech script health · Plus AdTech ชนกับ GTM (duplicate event)</td>
+      </tr>
+      <tr>
+        <td><b>Meta Ads</b><br><code>meta-1.0.0</code><br><a href="rule-set.html#meta">ดูรายข้อ →</a></td>
+        <td><code>M-01 … M-15</code><br>9 ข้อ · Phase 2</td>
+        <td>Pixel activity · Custom/Lookalike audience readiness · naming convention · budget และ end date, daily/lifetime mode · Advantage+ audience และ creative · website conversions · นโยบาย CBO/ABO</td>
+      </tr>
+      <tr>
+        <td><b>TikTok Ads</b><br><code>tiktok-1.0.0</code><br><a href="rule-set.html#tiktok">ดูรายข้อ →</a></td>
+        <td><code>T-01 … T-13</code><br>13 ข้อ · Phase 2</td>
+        <td>Pixel activity · audience readiness · naming convention (campaign/ad group/ad) · objective และ budget type · start/end date · audience size และ spending power · นโยบาย CBO/ABO</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="aside">ทุก rule ต้องมี ID, platform, category, severity, check type, evaluator version และ remediation type ครบ — และ run เดิมต้องอ้าง rule-set version เดิมเสมอ แม้จะมีการ publish rule ใหม่ไปแล้ว</p>
+</section>
+
+<!-- ═══════════════════ 05 · STRUCTURE ═══════════════════ -->
+<section id="structure">
+  <div class="eyebrow">06 / Layer stack</div>
+  <h2>โครงสร้างของโปรเจค</h2>
+  <p class="note">Ad Validate แยก repository และ lifecycle ออกจาก Plug AI New Job — ชั้นบนสุดคือ contract ที่คุยกับ upstream ส่วนชั้นล่างลงไปเป็นของ Ad Validate ทั้งหมด · ข้อห้ามหลัก: ไม่อ้าง DOM, state หรือ business logic ภายใน Plug AI New Job โดยตรงในทุกชั้น</p>
+
+  <div class="figure">
+  <svg width="1000" height="576" viewBox="0 0 1000 576" role="img" aria-labelledby="stack-title stack-desc">
+    <title id="stack-title">โครงสร้างระบบของ Ad Validate</title>
+    <desc id="stack-desc">Layer stack หกชั้นจากบนลงล่าง — integration boundary, Ad Validate UI, Ad Validate API, rule engine แบบ versioned ซึ่งเป็นชั้นหลัก, connectors ไปยัง ads platform และ tag health และ validation store ที่เก็บ run findings actions snapshots และ delivery events</desc>
+
+    <rect width="1000" height="576" fill="#F8F9FB"/>
+
+    <!-- direction indicator -->
+    <line x1="108" y1="96" x2="108" y2="464" stroke="rgba(62,72,80,.12)" stroke-width="1"/>
+    <text x="32" y="100" fill="#A6B4BF" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".12em">UPSTREAM</text>
+    <text x="32" y="468" fill="#A6B4BF" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".12em">DATA</text>
+
+    <!-- L1 -->
+    <rect x="136" y="88" width="800" height="64" fill="rgba(62,72,80,.03)" stroke="rgba(62,72,80,.12)" stroke-width="1"/>
+    <rect x="152" y="98" width="40" height="14" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+    <text x="172" y="108" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".1em">L1</text>
+    <text x="216" y="116" fill="#3E4850" font-size="14" font-weight="600">Integration boundary</text>
+    <text x="216" y="134" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace">launch input · completion output · validation.completed webhook</text>
+    <text x="920" y="124" fill="#A6B4BF" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="end">idempotent · retry-safe</text>
+
+    <!-- L2 -->
+    <rect x="136" y="152" width="800" height="64" fill="#FFFFFF" stroke="rgba(62,72,80,.12)" stroke-width="1"/>
+    <rect x="152" y="162" width="40" height="14" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+    <text x="172" y="172" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".1em">L2</text>
+    <text x="216" y="180" fill="#3E4850" font-size="14" font-weight="600">Ad Validate UI</text>
+    <text x="216" y="198" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace">precondition · scan progress · findings list · gate bar · proceed</text>
+    <text x="920" y="188" fill="#A6B4BF" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="end">กัน double-scan ที่ชั้นนี้</text>
+
+    <!-- L3 -->
+    <rect x="136" y="216" width="800" height="64" fill="rgba(62,72,80,.03)" stroke="rgba(62,72,80,.12)" stroke-width="1"/>
+    <rect x="152" y="226" width="40" height="14" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+    <text x="172" y="236" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".1em">L3</text>
+    <text x="216" y="244" fill="#3E4850" font-size="14" font-weight="600">Ad Validate API</text>
+    <text x="216" y="262" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace">POST /validation-runs · POST finding action · POST /{id}/proceed</text>
+    <text x="920" y="252" fill="#A6B4BF" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="end">gate policy อยู่ที่นี่</text>
+
+    <!-- L4 · FOCAL -->
+    <rect x="136" y="280" width="800" height="64" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <rect x="152" y="290" width="40" height="14" rx="2" fill="transparent" stroke="rgba(127,112,239,.55)" stroke-width=".8"/>
+    <text x="172" y="300" fill="#7F70EF" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".1em">L4</text>
+    <text x="216" y="308" fill="#3E4850" font-size="14" font-weight="600">Rule Engine (versioned)</text>
+    <text x="216" y="326" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace">google-1.0.0 · meta-1.0.0 · tiktok-1.0.0 — Setup / Configuration / Customization</text>
+    <text x="920" y="316" fill="#7F70EF" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="end">แยกจาก snapshot เสมอ</text>
+
+    <!-- L5 -->
+    <rect x="136" y="344" width="800" height="64" fill="#FFFFFF" stroke="rgba(62,72,80,.12)" stroke-width="1"/>
+    <rect x="152" y="354" width="40" height="14" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+    <text x="172" y="364" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".1em">L5</text>
+    <text x="216" y="372" fill="#3E4850" font-size="14" font-weight="600">Connectors</text>
+    <text x="216" y="390" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace">Ads Platform Adapter (Google · Meta · TikTok) · Tag Health / Inspector</text>
+    <text x="920" y="380" fill="#A6B4BF" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="end">token + scope ต่อ platform</text>
+
+    <!-- L6 -->
+    <rect x="136" y="408" width="800" height="64" fill="rgba(62,72,80,.03)" stroke="rgba(62,72,80,.12)" stroke-width="1"/>
+    <rect x="152" y="418" width="40" height="14" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+    <text x="172" y="428" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".1em">L6</text>
+    <text x="216" y="436" fill="#3E4850" font-size="14" font-weight="600">Validation Store</text>
+    <text x="216" y="454" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace">validation_runs · validation_findings · finding_actions · connector_snapshots · delivery_events</text>
+    <text x="920" y="444" fill="#A6B4BF" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="end">findings append-only</text>
+
+    <!-- legend -->
+    <line x1="32" y1="512" x2="968" y2="512" stroke="rgba(62,72,80,.10)" stroke-width=".8"/>
+    <text x="32" y="532" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".14em">LEGEND</text>
+    <rect x="116" y="524" width="20" height="10" rx="2" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="144" y="532" fill="#6F8190" font-size="9">ชั้นหลักของโปรเจคนี้</text>
+    <rect x="308" y="524" width="20" height="10" rx="2" fill="#FFFFFF" stroke="rgba(62,72,80,.12)" stroke-width="1"/>
+    <text x="336" y="532" fill="#6F8190" font-size="9">ชั้นปกติ</text>
+    <text x="444" y="532" fill="#6F8190" font-size="9">ขวาสุดของแต่ละแถว = ข้อบังคับหลักของชั้นนั้น</text>
+  </svg>
+  </div>
+
+  <table>
+    <thead><tr><th style="width:190px">สิทธิ์</th><th>ทำอะไรได้</th></tr></thead>
+    <tbody>
+      <tr><td><b>Operator</b></td><td>รัน scan · ดูผล · ใช้ auto-fix เท่าที่อนุญาต · re-scan</td></tr>
+      <tr><td><b>Reviewer / Lead</b></td><td>ทุกอย่างของ Operator + อนุมัติ Warning หรือ Manual exception</td></tr>
+      <tr><td><b>Admin</b></td><td>จัดการ credentials · เปิด-ปิด rule · rollout rule set version ใหม่</td></tr>
+      <tr><td><b>Service account</b></td><td>ส่ง job context เข้ามา และรับ completion outcome กลับ — ทำอย่างอื่นไม่ได้</td></tr>
+    </tbody>
+  </table>
+
+  <p class="aside">ยังเป็น open decision ก่อนเริ่ม build: backend stack และที่อยู่ repository, Ad Validate จะเป็น service ใหม่หรือ module ใน Plus AdTech backend, เจ้าของ credential และ token refresh strategy, source of truth ของ job/account mapping, rule management จะเป็น code config หรือ admin UI, scan expiry ที่เหมาะสม และใครมีสิทธิ์ approve exception</p>
+</section>
+
+<footer>
+  <div class="bar">
+    <span>SOURCE · docs/PRD.md §2–§11 + prototype (vGate, vActiveChecks, vRecomputeTracking)</span>
+    <a href="index.html">หน้ารวม</a>
+    <a href="user-flow.html">← User flow แบบ end-to-end</a>
+    <a href="rule-set.html">Rule set reference (39 ข้อ)</a>
+    <a href="system-flow.html">System flow (sequence)</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

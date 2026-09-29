@@ -1,0 +1,434 @@
+# -*- coding: utf-8 -*-
+"""Detailed Google Ads technical spec per rule — resource, GAQL, fields, enums,
+mutate operation, and precise pass/fail logic.
+
+Grounded against the Google Ads API reference (fetched via context7,
+`/websites/developers_google_google-ads_api`, snapshot reflects the v24/v25
+docs available at the time of writing). Field and resource names are verified
+against real documentation examples where noted; a few rules (marked with a
+`caveat`) rely on data the Ads API does not expose natively, and the spec
+says exactly what has to be sourced elsewhere instead of overclaiming a field
+that doesn't exist.
+
+`kind`:
+  "ads_api"   — read/write happens against the Google Ads API.
+  "web_scan"  — Ad Optimizer inspects the live website (network requests,
+                inline scripts) — no Google Ads API resource involved directly.
+  "mixed"     — combination of an Ads API read and a website scan or another
+                platform's API (GTM / Plus AdTech).
+"""
+
+GOOGLE_TECH_SPEC = {
+
+    "P-001": {
+        "kind": "ads_api",
+        "resource": "recommendation_subscription",
+        "query": (
+            "SELECT\n"
+            "  recommendation_subscription.recommendation_type,\n"
+            "  recommendation_subscription.status\n"
+            "FROM recommendation_subscription"
+        ),
+        "fields": [
+            ("recommendation_subscription.recommendation_type", "enum <code>RecommendationTypeEnum</code>",
+             "ประเภท recommendation ที่บัญชีนี้เปิดให้ subscribe อัตโนมัติได้ — ไม่ใช่ทุก type รองรับ"),
+            ("recommendation_subscription.status", "enum",
+             "สถานะการติดตามของ subscription แต่ละประเภท — เปิดอยู่ (subscribed) หรือไม่"),
+        ],
+        "enums": [
+            ("RecommendationTypeEnum (ที่ใช้ในกฎนี้)", [
+                ("OPTIMIZE_AD_ROTATION", "หมุนแสดงโฆษณาที่ทำผลงานดีที่สุดอัตโนมัติ"),
+                ("RAISE_TARGET_CPA / LOWER_TARGET_CPA", "ปรับ Target CPA ขึ้น/ลงตามข้อมูลผลงานล่าสุด"),
+                ("RAISE_TARGET_ROAS / LOWER_TARGET_ROAS", "ปรับ Target ROAS ขึ้น/ลงตามข้อมูลผลงานล่าสุด"),
+            ]),
+        ],
+        "mutate": (
+            "<code>RecommendationSubscriptionService.MutateRecommendationSubscriptions</code> — "
+            "ส่ง operation <code>update</code> พร้อม resource_name ของ subscription แต่ละประเภท "
+            "เปลี่ยน <code>status</code> เป็นเปิดใช้ (ครั้งละ 1 ประเภท)"
+        ),
+        "logic": (
+            "ผ่านเมื่อ subscription ทั้ง 3 ประเภทที่ระบบกำหนดไว้มีสถานะเปิดครบ · ไม่ผ่านเมื่อขาดไปอย่างน้อย 1 ประเภท "
+            "และแสดงเฉพาะประเภทที่ยังไม่เปิดให้กดเปิดทีละรายการหรือทั้งหมด"
+        ),
+        "caveat": (
+            "ไม่ใช่ทุก <code>RecommendationTypeEnum</code> รองรับการ subscribe ผ่าน API — "
+            "ต้องตรวจสอบรายการที่รองรับจริงของ API เวอร์ชันที่เลือกใช้ก่อน hardcode 3 ประเภทนี้ตายตัว"
+        ),
+    },
+
+    "P-027": {
+        "kind": "mixed",
+        "resource": "conversion_action + ข้อมูลภายในของ Plus AdTech",
+        "query": (
+            "-- จุดที่ 1a: ดึง conversion action ทั้งหมดที่ enabled\n"
+            "SELECT\n"
+            "  conversion_action.id,\n"
+            "  conversion_action.resource_name,\n"
+            "  conversion_action.name,\n"
+            "  conversion_action.type,\n"
+            "  conversion_action.status\n"
+            "FROM conversion_action\n"
+            "WHERE conversion_action.status = 'ENABLED'\n\n"
+            "-- จุดที่ 1b: เช็คว่า action ไหนกำลัง \"firing\" จริงในช่วงล่าสุด\n"
+            "SELECT\n"
+            "  segments.conversion_action,\n"
+            "  segments.conversion_action_name,\n"
+            "  metrics.conversions,\n"
+            "  segments.date\n"
+            "FROM campaign\n"
+            "WHERE segments.date DURING LAST_7_DAYS"
+        ),
+        "fields": [
+            ("conversion_action.origin", "enum <code>ConversionActionOriginEnum</code>",
+             "แหล่งกำเนิดระดับ platform เท่านั้น (เช่น <code>WEBSITE</code>, <code>GOOGLE_PLAY</code>) — "
+             "<b>ไม่ได้บอกว่าเครื่องมือไหนสร้าง</b> tag ให้ (ดู caveat)"),
+            ("conversion_action.type", "enum <code>ConversionActionTypeEnum</code>",
+             "วิธีติดตาม เช่น <code>WEBPAGE</code> (global site tag ทั่วไป), <code>GOOGLE_ANALYTICS_4</code> (import จาก GA4), "
+             "<code>UPLOAD_CLICKS</code> (Enhanced Conversions / offline import)"),
+            ("segments.conversion_action / segments.conversion_action_name", "segment",
+             "ใช้ join กับ resource รายงาน (เช่น <code>campaign</code>) เพื่อดึง <code>metrics.conversions</code> แยกตาม conversion action แต่ละตัว"),
+            ("metrics.conversions", "double",
+             "จำนวน conversion ที่เกิดจริงในช่วงวันที่ระบุ — ใช้ตัดสินว่า action นั้น “firing” หรือไม่ (>0 ในช่วง lookback ที่ตกลงกัน เช่น 7 วัน)"),
+        ],
+        "mutate": (
+            "ไม่มีการเขียนกลับ Google Ads API ในกฎนี้ — ผลของจุดที่ 2 (ผู้ใช้ยืนยันเครื่องมือที่ใช้จริง) "
+            "ถูกเขียนเป็น field ภายในระบบ DMS เอง: <code>job.tracking_method</code>, <code>job.exception_reason</code>"
+        ),
+        "logic": (
+            "จุดที่ 1: ดึง conversion action ที่ <code>status = ENABLED</code> ทั้งหมด กรองเฉพาะตัวที่ <code>metrics.conversions &gt; 0</code> "
+            "ในช่วง lookback แล้วเทียบ <code>resource_name</code> ของแต่ละตัวกับรายชื่อ conversion action ที่ Plus AdTech "
+            "บันทึกไว้ว่าตัวเองเป็นผู้สร้าง (เก็บฝั่ง Plus AdTech backend ไม่ใช่ฟิลด์ใน Ads API) — ตรงกัน = สร้างจาก Plus AdTech ผ่านอัตโนมัติ · "
+            "ไม่ตรงแต่ยัง firing = ต้องไปจุดที่ 2 · ไม่มีตัวไหน firing เลย = บล็อก"
+        ),
+        "caveat": (
+            "Google Ads API <b>ไม่มีฟิลด์ที่บอกตรง ๆ ว่า conversion action ถูกสร้างโดยเครื่องมือ/เว็บไซต์ไหน</b> "
+            "— <code>origin</code>/<code>type</code> บอกได้แค่ระดับ platform (เว็บไซต์ vs แอป vs import) ไม่ใช่ระดับ vendor tag "
+            "ดังนั้น “ตรงกับลายเซ็น Plus AdTech” ในทางปฏิบัติต้องเป็นการ <b>join กับรายการที่ Plus AdTech บันทึกเองว่าเคยสร้าง resource_name ไหนไว้บ้าง</b> "
+            "ไม่ใช่การอ่านฟิลด์ <code>creation_source</code> ที่ prototype อ้างถึง (ฟิลด์นี้ไม่มีอยู่จริงใน API) — ต้องออกแบบตาราง mapping นี้ฝั่ง Plus AdTech เอง"
+        ),
+    },
+
+    "P-003": {
+        "kind": "ads_api",
+        "resource": "conversion_action, customer",
+        "query": (
+            "SELECT\n"
+            "  conversion_action.id,\n"
+            "  conversion_action.name,\n"
+            "  conversion_action.status\n"
+            "FROM conversion_action\n"
+            "WHERE conversion_action.status = 'ENABLED'\n\n"
+            "SELECT customer.conversion_tracking_setting.conversion_tracking_status\n"
+            "FROM customer"
+        ),
+        "fields": [
+            ("conversion_action.status", "enum <code>ConversionActionStatusEnum</code>",
+             "ต้องเป็น <code>ENABLED</code> — <code>REMOVED</code>/<code>HIDDEN</code> ถือว่าไม่ทำงาน"),
+            ("customer.conversion_tracking_setting.conversion_tracking_status", "enum",
+             "สถานะการตั้งค่า conversion tracking ระดับบัญชี — ยืนยันว่าตั้งค่าไว้ถูกต้องหรือยังไม่ได้ตั้ง"),
+            ("metrics.conversions (segment ตาม conversion action)", "double",
+             "ผลรวม conversion ในช่วง lookback window — ใช้เทียบว่า “No recent conversions” จริงหรือไม่"),
+        ],
+        "mutate": None,
+        "logic": (
+            "fail เมื่อ conversion action มี <code>status = ENABLED</code> แต่ <code>metrics.conversions</code> รวมในช่วง lookback "
+            "(ค่าที่ต้องตกลงกับทีม เช่น 7 วันล่าสุด) เท่ากับ 0 ทั้งที่ campaign ยังมี clicks/impressions เข้าอยู่ปกติ — "
+            "สื่อว่า tag หลุดหรือเว็บไม่ยิงสัญญาณ ไม่ใช่แค่ไม่มีคนเข้าเว็บ"
+        ),
+        "caveat": None,
+    },
+
+    "P-004": {
+        "kind": "ads_api",
+        "resource": "conversion_action",
+        "query": (
+            "SELECT\n"
+            "  conversion_action.id,\n"
+            "  conversion_action.name,\n"
+            "  conversion_action.primary_for_goal\n"
+            "FROM conversion_action\n"
+            "WHERE conversion_action.status = 'ENABLED'"
+        ),
+        "fields": [
+            ("conversion_action.primary_for_goal", "bool",
+             "true = นับใน bidding และ metric “Conversions” หลัก · false = ไม่ถูกใช้ optimize เว้นแต่ถูกระบุใน "
+             "CustomConversionGoal แยกต่างหาก — ยังนับใน “All conversions” เสมอ"),
+        ],
+        "mutate": (
+            "<code>ConversionActionService.MutateConversionActions</code> — operation <code>update</code> "
+            "field mask <code>primary_for_goal</code> ตั้งเป็น <code>false</code> สำหรับ action ที่ต้องการลดเป็น secondary"
+        ),
+        "logic": (
+            "fail เมื่อ conversion action ที่ควรเป็นตัวรอง (เช่น Add-to-cart, Pageview) มี <code>primary_for_goal = true</code> "
+            "พร้อมกับ conversion หลักของธุรกิจ (เช่น Purchase) — ทำให้ bidding ปรับตามสัญญาณที่ไม่ใช่ยอดขายจริง"
+        ),
+        "caveat": None,
+    },
+
+    "P-008": {
+        "kind": "ads_api",
+        "resource": "campaign_criterion (LOCATION), geo_target_constant",
+        "query": (
+            "SELECT\n"
+            "  campaign_criterion.location.geo_target_constant,\n"
+            "  campaign_criterion.negative\n"
+            "FROM campaign_criterion\n"
+            "WHERE campaign_criterion.type = 'LOCATION'"
+        ),
+        "fields": [
+            ("campaign_criterion.location.geo_target_constant", "resource name",
+             "เช่น <code>geoTargetConstants/2764</code> (ประเทศไทย) — ต้อง resolve ต่อว่าเป็นระดับอะไรผ่าน resource <code>geo_target_constant</code>"),
+            ("geo_target_constant.target_type", "string",
+             "ระดับของ location เช่น “Country”, “Province/State”, “City” — ใช้ตัดสินว่าตั้งกว้างเกินไปหรือไม่"),
+            ("campaign_criterion.negative", "bool",
+             "false = positive target (ยิงหาคนในพื้นที่นี้) — ต้องดูเฉพาะแถวที่ negative=false"),
+        ],
+        "mutate": (
+            "<code>CampaignCriterionService.MutateCampaignCriteria</code> — ลบ criterion ระดับประเทศ (<code>remove</code>) "
+            "แล้ว <code>create</code> ใหม่เป็นระดับจังหวัด/เมือง โดยหา <code>geo_target_constant</code> ที่ถูกต้องผ่าน "
+            "<code>GeoTargetConstantService.SuggestGeoTargetConstants</code> (ใส่ชื่อจังหวัดเป็น location name)"
+        ),
+        "logic": (
+            "fail เมื่อพบ positive location criterion ที่ <code>geo_target_constant.target_type = Country</code> สำหรับประเทศไทย "
+            "ทั้งที่ธุรกิจให้บริการเฉพาะบางจังหวัด — ทำให้แยกรายงานหรือคุมงบรายจังหวัดไม่ได้"
+        ),
+        "caveat": None,
+    },
+
+    "P-009": {
+        "kind": "ads_api",
+        "resource": "campaign",
+        "query": (
+            "SELECT campaign.geo_target_type_setting.positive_geo_target_type\n"
+            "FROM campaign\n"
+            "WHERE campaign.id = {campaign_id}"
+        ),
+        "fields": [
+            ("campaign.geo_target_type_setting.positive_geo_target_type", "enum <code>PositiveGeoTargetTypeEnum</code>",
+             "<code>PRESENCE_OR_INTEREST</code> (ค่า default — เข้าถึงคนในพื้นที่ + คนที่สนใจพื้นที่นั้น) หรือ "
+             "<code>PRESENCE</code> (เฉพาะคนที่อยู่จริงในพื้นที่ — เข้มกว่า เหมาะกับธุรกิจบริการเฉพาะพื้นที่)"),
+        ],
+        "mutate": (
+            "<code>CampaignService.MutateCampaigns</code> — operation <code>update</code>, "
+            "field mask <code>geo_target_type_setting.positive_geo_target_type</code>"
+        ),
+        "logic": "pass เมื่อค่าตรงกับประเภทธุรกิจที่ตกลงไว้ (ปกติแนะนำ PRESENCE สำหรับธุรกิจบริการในพื้นที่)",
+        "caveat": None,
+    },
+
+    "P-010": {
+        "kind": "ads_api",
+        "resource": "campaign_criterion (LANGUAGE), language_constant",
+        "query": (
+            "SELECT campaign_criterion.language.language_constant\n"
+            "FROM campaign_criterion\n"
+            "WHERE campaign_criterion.type = 'LANGUAGE'"
+        ),
+        "fields": [
+            ("campaign_criterion.language.language_constant", "resource name",
+             "เช่น <code>languageConstants/1054</code> (ไทย), <code>languageConstants/1000</code> (อังกฤษ)"),
+        ],
+        "mutate": "<code>CampaignCriterionService.MutateCampaignCriteria</code>",
+        "logic": "semi-auto — ระบบดึงรายการภาษาที่ตั้งไว้มาเทียบกับกลุ่มเป้าหมายในบรีฟ การตัดสินว่า “ตรง” เป็นดุลยพินิจของทีม",
+        "caveat": None,
+    },
+
+    "P-011": {
+        "kind": "ads_api",
+        "resource": "campaign_asset, ad_group_asset, customer_asset",
+        "query": (
+            "SELECT campaign_asset.field_type, campaign_asset.status\n"
+            "FROM campaign_asset\n"
+            "WHERE campaign_asset.campaign = 'customers/{id}/campaigns/{id}'"
+        ),
+        "fields": [
+            ("{level}_asset.field_type", "enum <code>AssetFieldTypeEnum</code>",
+             "ประเภท extension เช่น <code>SITELINK</code>, <code>CALLOUT</code>, <code>STRUCTURED_SNIPPET</code>, <code>CALL</code>"),
+            ("{level}_asset.status", "enum", "สถานะการผูก asset เข้ากับระดับนั้น (enabled/removed)"),
+        ],
+        "mutate": (
+            "สร้าง asset ก่อนด้วย <code>AssetService.MutateAssets</code> แล้วผูกด้วย "
+            "<code>CampaignAssetService</code> / <code>AdGroupAssetService</code> / <code>CustomerAssetService</code> "
+            "ตามระดับที่ต้องการ พร้อมระบุ <code>field_type</code>"
+        ),
+        "logic": (
+            "fail เมื่อ query ทั้ง 3 resource แล้วไม่พบ <code>field_type</code> ที่จำเป็นครบ 4 ประเภท (Call, Sitelink, "
+            "Structured Snippet, Callout) — Call asset ต้องตรวจเพิ่มว่าเบอร์ที่ผูกรับสายได้จริง (ตรวจนอก API)"
+        ),
+        "caveat": None,
+    },
+
+    "P-013": {
+        "kind": "ads_api",
+        "resource": "ad_group_ad",
+        "query": (
+            "SELECT ad_group_ad.ad.id, ad_group_ad.ad_strength\n"
+            "FROM ad_group_ad\n"
+            "WHERE ad_group_ad.status = 'ENABLED'"
+        ),
+        "fields": [
+            ("ad_group_ad.ad_strength", "enum <code>AdStrengthEnum</code>",
+             "<code>EXCELLENT</code> / <code>GOOD</code> / <code>AVERAGE</code> / <code>POOR</code> / <code>NO_ADS</code> / "
+             "<code>PENDING</code> / <code>UNKNOWN</code> — คำนวณจากความหลากหลายของ headline/description และ relevance"),
+        ],
+        "mutate": None,
+        "logic": "fail เมื่อมี ad ที่ enabled อย่างน้อย 1 ตัวมี ad_strength ต่ำกว่า GOOD (คือ AVERAGE หรือ POOR)",
+        "caveat": None,
+    },
+
+    "P-014": {
+        "kind": "ads_api",
+        "resource": "shared_set (NEGATIVE_KEYWORDS), shared_criterion, campaign_shared_set",
+        "query": (
+            "SELECT shared_set.id, shared_set.type, shared_set.name\n"
+            "FROM shared_set\n"
+            "WHERE shared_set.type = 'NEGATIVE_KEYWORDS'\n\n"
+            "SELECT campaign_shared_set.campaign, campaign_shared_set.shared_set\n"
+            "FROM campaign_shared_set"
+        ),
+        "fields": [
+            ("shared_set.type", "enum <code>SharedSetTypeEnum</code>", "ต้องเป็น <code>NEGATIVE_KEYWORDS</code>"),
+            ("shared_criterion.keyword.text / match_type", "string / enum <code>KeywordMatchTypeEnum</code>",
+             "คำและรูปแบบการแมตช์ของ negative keyword แต่ละคำในชุด"),
+            ("campaign_shared_set.campaign / .shared_set", "resource name", "ตัวเชื่อมว่า shared set ถูกผูกเข้ากับ campaign ไหนบ้าง"),
+        ],
+        "mutate": (
+            "3 ขั้น: <code>SharedSetService.MutateSharedSets</code> (สร้าง set) → "
+            "<code>SharedCriterionService.MutateSharedCriteria</code> (เพิ่มคำ) → "
+            "<code>CampaignSharedSetService.MutateCampaignSharedSets</code> (ผูกเข้า campaign)"
+        ),
+        "logic": (
+            "fail เมื่อไม่พบ <code>shared_set</code> ประเภท NEGATIVE_KEYWORDS ที่ผูกกับ campaign นี้ผ่าน "
+            "<code>campaign_shared_set</code> เลย หรือผูกอยู่แต่ยังไม่มีคำในชุดพื้นฐานที่ทีมกำหนด (คำเชิงข้อมูล/หางาน/รีวิว)"
+        ),
+        "caveat": None,
+    },
+
+    "P-026": {
+        "kind": "ads_api",
+        "resource": "campaign (network_settings)",
+        "query": (
+            "SELECT\n"
+            "  campaign.advertising_channel_type,\n"
+            "  campaign.network_settings.target_search_network,\n"
+            "  campaign.network_settings.target_content_network,\n"
+            "  campaign.network_settings.target_partner_search_network\n"
+            "FROM campaign\n"
+            "WHERE campaign.advertising_channel_type = 'SEARCH'"
+        ),
+        "fields": [
+            ("campaign.network_settings.target_search_network", "bool", "ยิงบน Google Search"),
+            ("campaign.network_settings.target_content_network", "bool",
+             "Display Expansion — ยิงบน Google Display Network ด้วยงบ Search ที่เหลือ (ตัวที่ P-026 อยากให้ปิด)"),
+            ("campaign.network_settings.target_partner_search_network", "bool", "ยิงบน Search partner sites"),
+        ],
+        "mutate": (
+            "<code>CampaignService.MutateCampaigns</code> — operation <code>update</code>, "
+            "field mask <code>network_settings.target_content_network</code> ตั้งเป็น <code>false</code>"
+        ),
+        "logic": "fail เมื่อ campaign ประเภท SEARCH มี target_content_network = true (Display Expansion เปิดอยู่)",
+        "caveat": None,
+    },
+
+    "P-015": {
+        "kind": "ads_api",
+        "resource": "campaign_criterion (mobile_app_category / mobile_application, negative)",
+        "query": (
+            "SELECT campaign_criterion.mobile_app_category.mobile_app_category_constant,\n"
+            "  campaign_criterion.mobile_application.app_id,\n"
+            "  campaign_criterion.negative\n"
+            "FROM campaign_criterion\n"
+            "WHERE campaign_criterion.campaign = 'customers/{id}/campaigns/{id}'\n"
+            "  AND campaign_criterion.negative = true"
+        ),
+        "fields": [
+            ("campaign_criterion.mobile_app_category.mobile_app_category_constant", "resource name",
+             "เช่น <code>mobileAppCategoryConstants/69500</code> = ทุกหมวดแอปมือถือ (ยกเว้นทีเดียวทั้งหมด)"),
+            ("campaign_criterion.mobile_application.app_id", "string",
+             "ใช้เมื่อยกเว้นเป็นรายแอป แทนที่จะยกเว้นทั้งหมวด — ต้องแปลงจาก URL/store listing เป็นรูปแบบ <code>{store}-{app_id}</code> เอง (API ไม่ค้นหาให้)"),
+            ("campaign_criterion.negative", "bool", "ต้องเป็น true (นี่คือ exclusion ไม่ใช่ target)"),
+        ],
+        "mutate": "<code>CampaignCriterionService.MutateCampaignCriteria</code> — create negative criterion บน campaign ประเภท Display",
+        "logic": "fail เมื่อ campaign ประเภท Display ไม่มี negative criterion ประเภท mobile app/category เลย",
+        "caveat": "ระบบค้นหาแอปมือถือทีละรายการเองไม่ได้ — ผู้ใช้ต้องวาง URL/app id เองแล้วระบบแปลงรูปแบบให้",
+    },
+
+    "P-017": {
+        "kind": "ads_api",
+        "resource": "campaign_criterion (mobile_app_category / mobile_application, negative) — ระดับ YouTube/video campaign",
+        "query": (
+            "SELECT campaign_criterion.mobile_app_category.mobile_app_category_constant,\n"
+            "  campaign_criterion.negative\n"
+            "FROM campaign_criterion\n"
+            "WHERE campaign_criterion.campaign = 'customers/{id}/campaigns/{id}'\n"
+            "  AND campaign_criterion.negative = true"
+        ),
+        "fields": [
+            ("campaign_criterion.mobile_app_category.mobile_app_category_constant", "resource name", "กลไกเดียวกับ P-015 แต่ใช้กับ campaign ที่ยิงบน YouTube"),
+        ],
+        "mutate": "<code>CampaignCriterionService.MutateCampaignCriteria</code>",
+        "logic": "fail เมื่อ campaign ที่มี placement บน YouTube ไม่มี negative criterion ประเภทนี้เลย",
+        "caveat": "ระบบค้นหาแอปมือถือทีละรายการเองไม่ได้ — ผู้ใช้ต้องวาง URL/app id เองแล้วระบบแปลงรูปแบบให้ เหมือน P-015",
+    },
+
+    "P-023": {
+        "kind": "web_scan",
+        "resource": "หน้าเว็บไซต์จริง (landing / thank-you) — ไม่ใช่ Google Ads API",
+        "query": None,
+        "fields": [
+            ("Network request", "HTTP request", "หา request ไปยัง <code>googletagmanager.com/gtag/js?id=AW-XXXXXXXXX</code> "
+             "หรือ inline script ที่เรียก <code>gtag('config', 'AW-XXXXXXXXX')</code>"),
+            ("Conversion ID ที่คาดหวัง", "string",
+             "มาจาก <code>customer.conversion_tracking_setting.conversion_tracking_id</code> ที่อ่านจาก Ads API — "
+             "ใช้เป็นค่าที่ต้องไปหาให้เจอบนหน้าเว็บ"),
+        ],
+        "mutate": None,
+        "logic": "fail เมื่อไม่พบ request ที่มี conversion ID ตรงกัน หรือพบแต่ response status ≠ 200",
+        "caveat": "รู้ “ต้องหา AW-id อะไร” จาก Ads API แต่การยืนยันว่า “ติดจริงบนเว็บ” ต้องสแกนหน้าเว็บเสมอ — Ads API บอกไม่ได้ว่าเว็บติด tag จริงหรือไม่",
+    },
+
+    "P-024": {
+        "kind": "web_scan",
+        "resource": "หน้าเว็บไซต์จริง — ไม่ใช่ Google Ads API",
+        "query": None,
+        "fields": [
+            ("Network request / inline config", "HTTP request",
+             "หา <code>gtag('config', 'G-XXXXXXX')</code> หรือ GA4 Measurement Protocol hit (<code>google-analytics.com/g/collect</code>)"),
+            ("Property ID ที่คาดหวัง", "string", "เทียบกับ GA4 property ที่ผูกไว้กับบัญชี (จาก GA4 Admin API หรือค่าที่ New Job ส่งมา)"),
+        ],
+        "mutate": None,
+        "logic": "fail เมื่อไม่พบ G-id ที่ตรงกันยิงสัญญาณ หรือยิงแต่ไม่เห็นใน GA4 Realtime report",
+        "caveat": None,
+    },
+
+    "P-025": {
+        "kind": "web_scan",
+        "resource": "หน้าเว็บไซต์จริง — ไม่ใช่ Google Ads API",
+        "query": None,
+        "fields": [
+            ("script[src] domain check", "HTTP request",
+             "ต้องพบ <code>&lt;script src=\"https://gateway.plus-adtech.com/bundle.js\"&gt;</code> โหลดสำเร็จ (200) บนทุกหน้าหลัก"),
+            ("จำนวน loader instance", "count", "นับจำนวน script tag ที่ match domain เดียวกัน — ต้องมีแค่ 1 ชุดต่อหน้า ไม่ใช่โหลดซ้ำ"),
+            ("legacy domain check", "HTTP request", "ต้อง<b>ไม่</b>พบ <code>gateway.autodigi.net</code> โหลดคู่กันบนหน้าเดียวกัน"),
+        ],
+        "mutate": None,
+        "logic": "fail รวมเมื่อ sub-check ข้อใดข้อหนึ่งไม่ผ่าน (ไม่มี / โหลดซ้ำ / มี Autodigi ทับ) — ต้องผ่านครบทั้ง 3 จุด",
+        "caveat": None,
+    },
+
+    "P-028": {
+        "kind": "mixed",
+        "resource": "Plus AdTech event configuration API + GTM API (read-only)",
+        "query": None,
+        "fields": [
+            ("Plus AdTech: event configuration", "API ภายใน",
+             "ต้องมี event ที่ตั้งค่าไว้อย่างน้อย 1 event ตรงกับ conversion ที่ผูกกับงานนี้"),
+            ("GTM: tags[] / triggers[] ของ container เป้าหมาย", "GTM API (read-only)",
+             "list tag ทั้งหมดในเว็บไซต์นี้ เทียบ event name + trigger condition กับสิ่งที่ Plus AdTech ตั้งไว้"),
+        ],
+        "mutate": None,
+        "logic": "fail เมื่อ (a) Plus AdTech ยังไม่ตั้งค่า event หรือ (b) พบ GTM tag เดิมที่ trigger event ชื่อเดียวกันยังทำงานอยู่คู่กัน — ต้องแก้ทั้ง 2 จุดจึงผ่าน",
+        "caveat": "ทำงานเฉพาะเมื่อ P-027 ผ่านด้วย <code>trackingMethod = adtech</code> เท่านั้น (ดู visibleIf)",
+    },
+}

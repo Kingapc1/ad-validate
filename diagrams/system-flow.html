@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ad Validate — System Flow</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{--paper:#F8F9FB;--ink:#3E4850;--muted:#6F8190;--soft:#A6B4BF;--rule:rgba(62,72,80,.16);--accent:#7F70EF;--accentTint:rgba(127,112,239,.10);--link:#283DD7}
+    *{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font-family:"Sarabun",sans-serif}
+    header{width:min(1600px,100%);margin:0 auto;padding:28px 40px 12px;display:flex;justify-content:space-between;align-items:end}.eyebrow{font:500 11px "Roboto Mono",monospace;letter-spacing:.13em;color:var(--accent);text-transform:uppercase}.title{font-size:30px;font-weight:500;margin-top:4px}.sub{font-size:12px;color:var(--muted);max-width:600px;text-align:right;line-height:1.6}
+    .wrap{width:min(1600px,100%);margin:0 auto;padding:0 24px 28px}.frame{overflow:auto;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}svg{display:block;width:1600px;height:1040px;background:var(--paper)}text{font-family:"Sarabun",sans-serif;fill:var(--ink)}
+    .actor{font-size:12px;font-weight:600}.actor-sub{font:500 8px "Roboto Mono",monospace;fill:var(--muted);letter-spacing:.05em}.msg{font-size:11px;font-weight:500}.msg-sub{font:500 8px "Roboto Mono",monospace;fill:var(--muted)}.guard{font-size:10px;font-weight:500;fill:var(--muted)}.note{width:min(1600px,100%);margin:0 auto;padding:0 40px 36px;color:var(--muted);font-size:12px;line-height:1.7}.note b{color:var(--ink)}
+  </style>
+</head>
+<body>
+<header><div><div class="eyebrow">System flow · Sequence</div><div class="title">Validation orchestration และ outcome handoff</div></div><div class="sub">Time flows top → bottom<br>เส้นสีน้ำเงิน = external API · เส้นประ = response/async</div></header>
+<div class="wrap"><div class="frame">
+<svg viewBox="0 0 1600 1040" role="img" aria-labelledby="t d">
+  <title id="t">Ad Validate system sequence</title><desc id="d">Sequence between New Job, Ad Validate UI and API, validation core, ads platform adapters and tag health inspector.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6F8190"/></marker>
+    <marker id="arrowAccent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#7F70EF"/></marker>
+    <marker id="arrowLink" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#283DD7"/></marker>
+    <marker id="arrowOpen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polyline points="0 0,8 3,0 6" fill="none" stroke="#6F8190" stroke-width="1.2"/></marker>
+  </defs>
+  <rect width="1600" height="1040" fill="#F8F9FB"/>
+
+  <!-- lifelines -->
+  <line x1="160" y1="112" x2="160" y2="980" stroke="rgba(62,72,80,.20)" stroke-dasharray="3 3"/>
+  <line x1="480" y1="112" x2="480" y2="980" stroke="rgba(62,72,80,.20)" stroke-dasharray="3 3"/>
+  <line x1="800" y1="112" x2="800" y2="980" stroke="rgba(62,72,80,.20)" stroke-dasharray="3 3"/>
+  <line x1="1120" y1="112" x2="1120" y2="980" stroke="rgba(62,72,80,.20)" stroke-dasharray="3 3"/>
+  <line x1="1440" y1="112" x2="1440" y2="980" stroke="rgba(62,72,80,.20)" stroke-dasharray="3 3"/>
+  <rect x="476" y="164" width="8" height="732" fill="rgba(62,72,80,.06)" stroke="#6F8190" stroke-width=".8"/>
+  <rect x="796" y="214" width="8" height="630" fill="rgba(62,72,80,.06)" stroke="#6F8190" stroke-width=".8"/>
+  <rect x="1116" y="398" width="8" height="128" fill="rgba(62,72,80,.06)" stroke="#6F8190" stroke-width=".8"/>
+  <rect x="1436" y="540" width="8" height="116" fill="rgba(62,72,80,.06)" stroke="#6F8190" stroke-width=".8"/>
+
+  <!-- messages before actors -->
+  <line x1="160" y1="164" x2="472" y2="164" stroke="#7F70EF" stroke-width="2" marker-end="url(#arrowAccent)"/>
+  <line x1="488" y1="214" x2="792" y2="214" stroke="#6F8190" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+  <!-- ALT fragment: input readiness -->
+  <rect x="436" y="246" width="408" height="132" rx="4" fill="rgba(62,72,80,.02)" stroke="rgba(62,72,80,.22)"/>
+  <rect x="436" y="246" width="44" height="18" rx="2" fill="#F8F9FB" stroke="rgba(62,72,80,.22)"/>
+  <text class="msg-sub" x="458" y="259" text-anchor="middle">ALT</text>
+  <text class="guard" x="448" y="282">[ข้อมูลครบ]</text>
+  <line x1="792" y1="302" x2="488" y2="302" stroke="#6F8190" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <line x1="444" y1="322" x2="836" y2="322" stroke="rgba(62,72,80,.20)" stroke-dasharray="4 3"/>
+  <text class="guard" x="448" y="342">[ข้อมูลไม่ครบ]</text>
+  <line x1="792" y1="360" x2="488" y2="360" stroke="#6F8190" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+
+  <line x1="488" y1="410" x2="1112" y2="410" stroke="#283DD7" stroke-width="1.5" marker-end="url(#arrowLink)"/>
+  <line x1="1112" y1="476" x2="488" y2="476" stroke="#283DD7" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrowLink)"/>
+  <line x1="488" y1="552" x2="1432" y2="552" stroke="#283DD7" stroke-width="1.5" marker-end="url(#arrowLink)"/>
+  <line x1="1432" y1="620" x2="488" y2="620" stroke="#283DD7" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrowLink)"/>
+  <line x1="488" y1="688" x2="792" y2="688" stroke="#6F8190" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <path d="M804 738 H844 Q852 738 852 746 V778 Q852 786 844 786 H804" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="792" y1="830" x2="488" y2="830" stroke="#6F8190" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <line x1="472" y1="896" x2="168" y2="896" stroke="#7F70EF" stroke-width="2" marker-end="url(#arrowAccent)"/>
+  <line x1="160" y1="948" x2="472" y2="948" stroke="#6F8190" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrowOpen)"/>
+
+  <!-- message labels with clear gap -->
+  <rect x="236" y="136" width="160" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="316" y="149" text-anchor="middle">เปิดด้วย Job context</text>
+  <rect x="546" y="186" width="180" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="636" y="199" text-anchor="middle">สร้าง run + ตรวจ input</text>
+  <rect x="560" y="276" width="160" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="640" y="289" text-anchor="middle">Ready to validate</text>
+  <rect x="548" y="334" width="184" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="640" y="347" text-anchor="middle">Blocked + missing fields</text>
+  <rect x="700" y="382" width="200" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="800" y="395" text-anchor="middle">ดึง account / campaign / conversion</text>
+  <rect x="700" y="448" width="200" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="800" y="461" text-anchor="middle">Normalized ads snapshot</text>
+  <rect x="834" y="524" width="252" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="960" y="537" text-anchor="middle">ตรวจ website / scripts / event health</text>
+  <rect x="846" y="592" width="228" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="960" y="605" text-anchor="middle">Normalized tag-health snapshot</text>
+  <rect x="570" y="660" width="140" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="640" y="673" text-anchor="middle">ประเมิน versioned rules</text>
+  <rect x="868" y="710" width="212" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="974" y="723" text-anchor="middle">Persist findings + audit event</text>
+  <rect x="558" y="802" width="164" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="640" y="815" text-anchor="middle">Findings + gate status</text>
+  <rect x="236" y="868" width="160" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="316" y="881" text-anchor="middle">Validation completed</text>
+  <rect x="226" y="920" width="180" height="18" rx="3" fill="#F8F9FB"/><text class="msg" x="316" y="933" text-anchor="middle">เปิด action: Send Mail</text>
+
+  <!-- actors -->
+  <rect x="80" y="40" width="160" height="72" rx="8" fill="#fff" stroke="#3E4850"/><text class="actor" x="160" y="70" text-anchor="middle">New Job / Workbook</text><text class="actor-sub" x="160" y="91" text-anchor="middle">UPSTREAM</text>
+  <rect x="400" y="40" width="160" height="72" rx="8" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.4"/><text class="actor" x="480" y="70" text-anchor="middle">Ad Validate UI / API</text><text class="actor-sub" x="480" y="91" text-anchor="middle">ORCHESTRATOR</text>
+  <rect x="720" y="40" width="160" height="72" rx="8" fill="#fff" stroke="#3E4850"/><text class="actor" x="800" y="70" text-anchor="middle">Validation Core</text><text class="actor-sub" x="800" y="91" text-anchor="middle">RULE ENGINE + STORE</text>
+  <rect x="1040" y="40" width="160" height="72" rx="8" fill="rgba(62,72,80,.04)" stroke="rgba(62,72,80,.30)"/><text class="actor" x="1120" y="70" text-anchor="middle">Ads Platform</text><text class="actor-sub" x="1120" y="91" text-anchor="middle">GOOGLE · META · TIKTOK</text>
+  <rect x="1360" y="40" width="160" height="72" rx="8" fill="rgba(62,72,80,.04)" stroke="rgba(62,72,80,.30)"/><text class="actor" x="1440" y="70" text-anchor="middle">Tag Health</text><text class="actor-sub" x="1440" y="91" text-anchor="middle">INSPECTOR</text>
+</svg>
+</div></div>
+<div class="note"><b>ขอบเขต:</b> ภาพนี้เป็น system overview จึงรวม Rule Engine และ Audit Store เป็น Validation Core หนึ่ง lifeline รายละเอียด auto-fix, external fix และ exception จะวนกลับมา re-evaluate ผ่าน API แต่ไม่แสดงเป็น message แยกเพื่อรักษา complexity budget ของ sequence diagram</div>
+<div class="note" style="display:flex;gap:18px;flex-wrap:wrap;border-top:1px solid rgba(62,72,80,.12);padding-top:14px;font-family:'Roboto Mono',monospace;font-size:11px;letter-spacing:.06em"><a href="index.html" style="color:#283DD7;text-decoration:none">หน้ารวม</a><a href="user-flow.html" style="color:#283DD7;text-decoration:none">← User flow แบบ end-to-end</a><a href="ad-validate.html" style="color:#283DD7;text-decoration:none">Ad Validate — flow · logic · structure →</a></div>
+</body>
+</html>

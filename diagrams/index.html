@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ad Validate — Flow Diagrams</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F8F9FB; --paper-2:#FFFFFF;
+    --ink:#3E4850; --muted:#6F8190; --soft:#A6B4BF;
+    --rule:rgba(62,72,80,.12); --accent:#7F70EF; --accent-tint:rgba(127,112,239,.10); --link:#283DD7;
+    --font-sans:'Sarabun',sans-serif; --font-mono:'Roboto Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-sans)}
+  main{width:min(1040px,100%);margin:0 auto;padding:72px 32px 72px}
+  .eyebrow{font:500 11px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:42px;line-height:1.18;font-weight:500;margin:12px 0 0}
+  .lede{color:var(--muted);font-size:15px;line-height:1.8;max-width:740px;margin:14px 0 0}
+  svg.strip{display:block;max-width:100%;height:auto;margin-top:36px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:44px}
+  .card{display:block;text-decoration:none;color:inherit;background:var(--paper-2);
+    border:1px solid var(--rule);border-radius:6px;padding:26px 28px;min-height:196px}
+  .card:hover{border-color:var(--accent)}
+  .card.wide{grid-column:1/-1;min-height:0}
+  .card.focal{border-color:var(--accent);background:var(--accent-tint)}
+  .num{font:500 10px var(--font-mono);letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+  .card.focal .num{color:var(--accent)}
+  h2{font-size:22px;margin:14px 0 8px;font-weight:600}
+  .meta{font-size:13px;color:var(--muted);line-height:1.8}
+  .meta code{font-family:var(--font-mono);font-size:11px;background:rgba(127,112,239,.10);color:var(--link);padding:1px 5px;border-radius:3px}
+  footer{margin-top:52px;padding-top:16px;border-top:1px solid var(--rule);
+    font:400 11px var(--font-mono);color:var(--muted);letter-spacing:.06em}
+  @media(max-width:780px){.grid{grid-template-columns:1fr}h1{font-size:30px}}
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Plus AdTech · Product specification</div>
+  <h1>Ad Validate — flow diagrams</h1>
+  <p class="lede">ชุดภาพอธิบายโปรเจค Ad Validate ตั้งแต่ user flow แบบ end-to-end ของการเปิดงาน ไปจนถึง logic ภายในที่ตัดสินว่างานจะผ่านไปออนไลน์ได้หรือไม่ · เริ่มจากภาพที่ 01 แล้วคลิกกล่อง Ad Validate เพื่อเจาะลงรายละเอียด</p>
+
+  <svg class="strip" width="912" height="148" viewBox="0 0 912 148" role="img" aria-labelledby="hub-title hub-desc">
+    <title id="hub-title">ภาพรวมสี่ช่วงของโปรเจค</title>
+    <desc id="hub-desc">แถบสี่ขั้น — เปิดงานและ Assign, รอบนำเสนอกับ Revision, Ad Validate ซึ่งเป็นขอบเขตของโปรเจคนี้ และการอนุมัติกับเปิดงานออนไลน์</desc>
+    <defs>
+      <marker id="h-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6F8190"/></marker>
+    </defs>
+    <rect width="912" height="148" fill="#F8F9FB"/>
+
+    <line x1="208" y1="60" x2="256" y2="60" stroke="#6F8190" stroke-width="1.2" marker-end="url(#h-arrow)"/>
+    <line x1="432" y1="60" x2="480" y2="60" stroke="#6F8190" stroke-width="1.2" marker-end="url(#h-arrow)"/>
+    <line x1="656" y1="60" x2="704" y2="60" stroke="#6F8190" stroke-width="1.2" marker-end="url(#h-arrow)"/>
+
+    <rect x="32" y="32" width="176" height="56" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="120" y="58" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">เปิดงาน + Assign</text>
+    <text x="120" y="72" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">TL → MCC</text>
+
+    <rect x="256" y="32" width="176" height="56" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="344" y="58" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">นำเสนอ ⇄ Revision</text>
+    <text x="344" y="72" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">present · edit</text>
+
+    <rect x="480" y="32" width="176" height="56" rx="6" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="568" y="58" fill="#3E4850" font-size="13" font-weight="600" text-anchor="middle">Ad Validate</text>
+    <text x="568" y="72" fill="#7F70EF" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">ขอบเขตของ repo นี้</text>
+
+    <rect x="704" y="32" width="176" height="56" rx="6" fill="rgba(111,129,144,.10)" stroke="#A6B4BF" stroke-width="1"/>
+    <text x="792" y="58" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">อนุมัติ + ออนไลน์</text>
+    <text x="792" y="72" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">customer approve</text>
+
+    <line x1="32" y1="112" x2="880" y2="112" stroke="rgba(62,72,80,.10)" stroke-width=".8"/>
+    <text x="32" y="132" fill="#6F8190" font-size="9">ช่วงที่เป็นสีม่วงคือส่วนที่เอกสารชุดนี้อธิบายลงรายละเอียด — ช่วงอื่นอยู่ใน Plug AI New Job / Workbook</text>
+  </svg>
+
+  <div class="grid">
+    <a class="card" href="user-flow-v2.html">
+      <span class="num">01 / Swimlane · v2</span>
+      <h2>User flow — end to end (v2)</h2>
+      <div class="meta">เพิ่ม <b>background run</b>, แจ้งผลทาง In-app + LINE OA XPluser / Email และ cron 00:00 full re-scan + digest 08:30</div>
+    </a>
+    <a class="card focal" href="ad-validate-v2.html">
+      <span class="num">02 / Deep dive · v2</span>
+      <h2>Ad Validate — background run + คิวรอส่งตรวจ</h2>
+      <div class="meta">Apply = เก็บเป็น draft → “ส่งตรวจสอบใหม่ (n)” ยิงทั้งชุดแล้วตรวจทั้งชุด · run lifecycle · notification matrix · ส่วนอื่นคงไว้ตาม v1</div>
+    </a>
+    <a class="card" href="user-flow.html">
+      <span class="num">01 / Swimlane</span>
+      <h2>User flow — end to end</h2>
+      <div class="meta">TL → MCC → ลูกค้า → ระบบ<br>ตั้งแต่ Assign งาน ผ่านรอบ Present–Revision จนถึง <code>Customer Approve</code> และเปิดงานออนไลน์<br><b>กล่อง Ad Validate ในภาพนี้คลิกได้</b></div>
+    </a>
+    <a class="card focal" href="ad-validate.html">
+      <span class="num">02 / Deep dive</span>
+      <h2>Ad Validate — flow · logic · structure</h2>
+      <div class="meta">Precondition gate ใน New Job ที่บังคับลำดับ <b>Contact → Business</b> ก่อนปลดล็อกปุ่ม Validate · flow ภายใน · gate logic (<code>blocked</code> / <code>passed_with_warnings</code> / <code>passed</code>) · decision tree ของ P-027 · severity policy · layer ของระบบ</div>
+    </a>
+    <a class="card wide" href="rule-set.html">
+      <span class="num">03 / Reference</span>
+      <h2>Rule set — เงื่อนไข วิธีตรวจ และแหล่งข้อมูล</h2>
+      <div class="meta">ทั้ง 39 ข้อแยกตามแพลตฟอร์มและระดับความรุนแรง — แต่ละข้อบอกว่าตรวจอะไร ดึง API หรือสแกนหน้าเว็บ ถ้าไม่ผ่านแก้อย่างไร · <b>เฟสแรกทำ Google Ads (17 ข้อ)</b> Meta และ TikTok เขียนเตรียมไว้แล้ว</div>
+    </a>
+    <a class="card wide" href="system-flow.html">
+      <span class="num">04 / Sequence</span>
+      <h2>System flow</h2>
+      <div class="meta">ลำดับการสื่อสารระหว่าง New Job, Ad Validate UI/API, Rule Engine, Ads Platform Adapter และ Tag Health — รวม scan orchestration, การ re-evaluate หลังแก้ และการส่ง outcome กลับ upstream</div>
+    </a>
+  </div>
+
+  <footer>SOURCE · docs/PRD.md (draft 2026-09-18) · prototype/reference/new-job-ad-validate.integrated.html · Plus AdTech palette + Sarabun</footer>
+</main>
+</body>
+</html>

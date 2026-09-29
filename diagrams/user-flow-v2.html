@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ad Validate v2 — User Flow</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F8F9FB; --paper-2:#FFFFFF;
+    --ink:#3E4850; --muted:#6F8190; --soft:#A6B4BF;
+    --rule:rgba(62,72,80,.12); --rule-solid:#DBE1E5;
+    --accent:#7F70EF; --accent-tint:rgba(127,112,239,.10); --link:#283DD7;
+    --font-sans:'Sarabun',sans-serif; --font-mono:'Roboto Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-sans)}
+  header{width:min(1360px,100%);margin:0 auto;padding:56px 32px 8px}
+  .eyebrow{font:500 11px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:34px;line-height:1.2;font-weight:500;margin:10px 0 0}
+  .sub{color:var(--muted);font-size:14px;line-height:1.75;max-width:720px;margin:10px 0 0}
+  .wrap{width:min(1360px,100%);margin:0 auto;padding:20px 32px 0;overflow-x:auto}
+  svg{display:block;width:1280px;max-width:none}
+  svg text{font-family:var(--font-sans)}
+  a.hot{cursor:pointer}
+  a.hot .hit{fill:transparent}
+  a.hot:hover .plate{fill:rgba(127,112,239,.20)}
+  a.hot:focus-visible .plate{outline:none;stroke-width:2}
+  .cards{width:min(1360px,100%);margin:0 auto;padding:36px 32px 0;display:grid;grid-template-columns:1.15fr 1fr .95fr;gap:20px}
+  .card{background:var(--paper-2);border:1px solid var(--rule);border-radius:6px;padding:20px 22px}
+  .card .eyebrow{font-size:10px}
+  .card-header{display:flex;align-items:center;gap:8px;margin:10px 0 8px}
+  .card-dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .dot-accent{background:var(--accent)} .dot-ink{background:var(--ink)} .dot-muted{background:var(--muted)}
+  .card h3{font-size:16px;font-weight:600;margin:0}
+  .card ul{margin:0;padding-left:16px;color:var(--muted);font-size:13px;line-height:1.85}
+  .card code{font-family:var(--font-mono);font-size:11px;background:rgba(127,112,239,.08);color:var(--link);padding:1px 4px;border-radius:3px}
+  .whatsnew{width:min(1360px,100%);margin:0 auto;padding:16px 32px 0}
+  .whatsnew .box{background:var(--paper-2);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:6px;padding:14px 18px;font-size:13px;line-height:1.8;color:var(--muted)}
+  .whatsnew b{color:var(--ink)} .whatsnew a{color:var(--link)}
+  .tag-new{display:inline-block;font:500 9px var(--font-mono);letter-spacing:.08em;background:var(--accent);color:#fff;border-radius:2px;padding:1px 5px;margin-right:6px;vertical-align:1px}
+  footer{width:min(1360px,100%);margin:0 auto;padding:28px 32px 56px;margin-top:32px}
+  footer .bar{border-top:1px solid var(--rule);padding-top:14px;font:400 11px var(--font-mono);color:var(--muted);letter-spacing:.06em;display:flex;gap:18px;flex-wrap:wrap}
+  footer a{color:var(--link);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  @media(max-width:900px){.cards{grid-template-columns:1fr}h1{font-size:26px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Ad Validate · 01 / Swimlane · v2 (2026-09-25)</div>
+  <h1>User flow แบบ end-to-end — ตั้งแต่เปิดงานจนเปิดงานออนไลน์</h1>
+  <p class="sub">ภาพรวมเส้นทางของงานหนึ่งใบ ตั้งแต่ TL เตรียมข้อมูล ผ่านรอบนำเสนอ–แก้ไขกับลูกค้า เข้าสู่ Ad Validate แล้วจบที่ลูกค้าอนุมัติและเปิดงานออนไลน์ · <b>คลิกที่กล่อง Ad Validate</b> เพื่อดู flow ภายใน เงื่อนไข logic และโครงสร้างโปรเจค</p>
+</header>
+
+<div class="whatsnew"><div class="box">
+  <span class="tag-new">NEW</span><b>มีอะไรเปลี่ยนใน v2</b> — ① รอบตรวจที่ MCC กดเอง (เริ่มตรวจ / ส่งตรวจสอบใหม่) รันใน <b>background</b> ไม่ต้องรอหน้า Loading ② แก้ไขแล้วกด <b>Apply</b> = เก็บเป็น draft ใน <b>คิวรอส่งตรวจ</b> แล้วกด “ส่งตรวจสอบใหม่ (n)” เพื่อยิงการแก้ไขทั้งชุดและตรวจใหม่ทั้งชุด ③ ตรวจเสร็จแล้ว<b>แจ้ง MCC</b> ทาง In-app + LINE OA <b>XPluser</b> (Email สำรอง) ④ <b>Cron 00:00</b> full re-scan ทุกงานที่ค้าง แล้วส่ง digest 08:30 ·
+  <a href="ad-validate-v2.html#flow">ดู flow ภายใน v2 →</a> · <a href="user-flow.html">เวอร์ชันก่อนหน้า (v1)</a>
+</div></div>
+
+<div class="wrap">
+<svg viewBox="0 0 1280 624" role="img" aria-labelledby="e2e-title e2e-desc">
+  <title id="e2e-title">User flow end-to-end ของ Ad Validate เวอร์ชัน 2</title>
+  <desc id="e2e-desc">Swimlane สี่เลน — Team Lead, MCC, ลูกค้า และระบบ — แสดงลำดับงานตั้งแต่ Assign งาน ผ่านรอบนำเสนอและ Revision จนลูกค้าไม่มีรายการแก้ไข จากนั้นทำ precondition ใน New Job ให้ครบตามลำดับจึงกด Validate เข้าสู่ Ad Validate ได้ ซึ่งตรวจแบบ background แจ้งผลให้ MCC ทาง In-app และ LINE XPluser และมี cron full re-scan ตอนเที่ยงคืน แล้วส่งผลกลับให้ MCC ส่งเมล ลูกค้าอนุมัติ และเปิดงานออนไลน์</desc>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6F8190"/></marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7F70EF"/></marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#283DD7"/></marker>
+  </defs>
+
+  <rect width="1280" height="624" fill="#F8F9FB"/>
+
+  <!-- ══ lanes (drawn first: zones → arrows → nodes) ══ -->
+  <rect x="144" y="176" width="1104" height="168" fill="rgba(62,72,80,.025)"/>
+  <rect x="144" y="432" width="1104" height="120" fill="rgba(62,72,80,.025)"/>
+  <line x1="32" y1="88"  x2="1248" y2="88"  stroke="#DBE1E5" stroke-width="1"/>
+  <line x1="32" y1="176" x2="1248" y2="176" stroke="rgba(62,72,80,.12)" stroke-width="1"/>
+  <line x1="32" y1="344" x2="1248" y2="344" stroke="rgba(62,72,80,.12)" stroke-width="1"/>
+  <line x1="32" y1="432" x2="1248" y2="432" stroke="rgba(62,72,80,.12)" stroke-width="1"/>
+  <line x1="32" y1="552" x2="1248" y2="552" stroke="#DBE1E5" stroke-width="1"/>
+  <line x1="144" y1="88" x2="144" y2="552" stroke="rgba(62,72,80,.12)" stroke-width="1"/>
+
+  <!-- lane labels -->
+  <text x="32" y="124" fill="#3E4850" font-size="12" font-weight="600">Team Lead</text>
+  <text x="32" y="140" fill="#A6B4BF" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".12em">LANE 01 · TL</text>
+  <text x="32" y="252" fill="#3E4850" font-size="12" font-weight="600">MCC</text>
+  <text x="32" y="268" fill="#A6B4BF" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".12em">LANE 02 · OWNER</text>
+  <text x="32" y="384" fill="#3E4850" font-size="12" font-weight="600">ลูกค้า</text>
+  <text x="32" y="400" fill="#A6B4BF" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".12em">LANE 03 · CUSTOMER</text>
+  <text x="32" y="488" fill="#3E4850" font-size="12" font-weight="600">ระบบ</text>
+  <text x="32" y="504" fill="#A6B4BF" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".12em">LANE 04 · SYSTEM</text>
+
+  <!-- ══ arrows (before boxes) ══ -->
+  <!-- a1  C1 → C2 -->
+  <path d="M 312,132 H 416 Q 424,132 424,140 V 192" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- a2  C2 → decision -->
+  <path d="M 496,220 H 520 Q 528,220 528,228 V 380 Q 528,388 536,388 H 544" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- a3  decision → revision -->
+  <path d="M 608,352 V 300 Q 608,292 600,292 H 496" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- a4  revision → present (loop) -->
+  <path d="M 352,292 H 336 Q 328,292 328,284 V 228 Q 328,220 336,220 H 352" fill="none" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+  <!-- a5  decision → validate -->
+  <path d="M 672,388 H 760 Q 768,388 768,380 V 248" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- a6  validate → Ad Validate  [focal handoff] -->
+  <line x1="816" y1="248" x2="816" y2="460" stroke="#7F70EF" stroke-width="1.6" marker-end="url(#arrow-accent)"/>
+  <!-- a7  Ad Validate → send mail -->
+  <path d="M 880,492 H 968 Q 976,492 976,484 V 248" fill="none" stroke="#283DD7" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+  <!-- a8  send mail → customer approve -->
+  <path d="M 1048,220 H 1152 Q 1160,220 1160,228 V 360" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- a9  approve → online -->
+  <line x1="1160" y1="416" x2="1160" y2="460" stroke="#6F8190" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- ══ arrow labels (mask + 6–10px gap) ══ -->
+  <rect x="332" y="112" width="64" height="12" rx="2" fill="#F8F9FB"/>
+  <text x="364" y="121" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">ASSIGN</text>
+
+  <rect x="538" y="294" width="76" height="12" rx="2" fill="#F8F9FB"/>
+  <text x="576" y="303" fill="#6F8190" font-size="9" text-anchor="middle">นำเสนอแล้ว</text>
+
+  <rect x="516" y="272" width="64" height="12" rx="2" fill="#F8F9FB"/>
+  <text x="548" y="281" fill="#6F8190" font-size="9" text-anchor="middle">ขอแก้ไข</text>
+
+  <rect x="240" y="250" width="80" height="12" rx="2" fill="#F8F9FB"/>
+  <text x="280" y="259" fill="#6F8190" font-size="9" text-anchor="middle">นำเสนอใหม่</text>
+
+  <rect x="680" y="368" width="80" height="12" rx="2" fill="#F8F9FB"/>
+  <text x="720" y="377" fill="#6F8190" font-size="9" text-anchor="middle">ไม่มีแก้ไข</text>
+
+  <rect x="826" y="334" width="96" height="12" rx="2" fill="#F8F9FB"/>
+  <text x="874" y="343" fill="#7F70EF" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">JOB CONTEXT</text>
+
+  <rect x="986" y="354" width="96" height="12" rx="2" fill="#F8F9FB"/>
+  <text x="1034" y="363" fill="#283DD7" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">OUTCOME</text>
+
+  <rect x="1052" y="200" width="96" height="12" rx="2" fill="#F8F9FB"/>
+  <text x="1100" y="209" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">SEND MAIL</text>
+
+  <rect x="1088" y="432" width="62" height="12" rx="2" fill="#F8F9FB"/>
+  <text x="1119" y="441" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">APPROVED</text>
+
+  <!-- ══ nodes ══ -->
+
+  <!-- C1 · TL -->
+  <rect x="168" y="104" width="144" height="56" rx="6" fill="#F8F9FB"/>
+  <rect x="168" y="104" width="144" height="56" rx="6" fill="rgba(111,129,144,.10)" stroke="#A6B4BF" stroke-width="1"/>
+  <rect x="176" y="112" width="24" height="12" rx="2" fill="transparent" stroke="rgba(166,180,191,.7)" stroke-width=".8"/>
+  <text x="188" y="121" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">TL</text>
+  <text x="240" y="142" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">เตรียมข้อมูล + Assign</text>
+  <text x="240" y="154" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">status → present</text>
+
+  <!-- C2 · Present -->
+  <rect x="352" y="192" width="144" height="56" rx="6" fill="#F8F9FB"/>
+  <rect x="352" y="192" width="144" height="56" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+  <rect x="360" y="200" width="32" height="12" rx="2" fill="transparent" stroke="rgba(62,72,80,.40)" stroke-width=".8"/>
+  <text x="376" y="209" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">MCC</text>
+  <text x="424" y="230" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">นำเสนอ + แนบลิงก์</text>
+  <text x="424" y="242" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">กด Present</text>
+
+  <!-- Revision -->
+  <rect x="352" y="264" width="144" height="56" rx="6" fill="#F8F9FB"/>
+  <rect x="352" y="264" width="144" height="56" rx="6" fill="rgba(62,72,80,.02)" stroke="rgba(62,72,80,.30)" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="360" y="272" width="32" height="12" rx="2" fill="transparent" stroke="rgba(62,72,80,.30)" stroke-width=".8"/>
+  <text x="376" y="281" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">MCC</text>
+  <text x="424" y="302" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">แก้งาน + Revision Notes</text>
+  <text x="424" y="314" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">status → edit</text>
+
+  <!-- Decision -->
+  <polygon points="608,352 672,388 608,424 544,388" fill="#F8F9FB"/>
+  <polygon points="608,352 672,388 608,424 544,388" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+  <text x="608" y="386" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">ลูกค้าขอ</text>
+  <text x="608" y="400" fill="#3E4850" font-size="11" font-weight="600" text-anchor="middle">แก้ไข?</text>
+
+  <!-- C4 · Validate -->
+  <rect x="720" y="192" width="144" height="56" rx="6" fill="#F8F9FB"/>
+  <rect x="720" y="192" width="144" height="56" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+  <rect x="728" y="200" width="32" height="12" rx="2" fill="transparent" stroke="rgba(62,72,80,.40)" stroke-width=".8"/>
+  <text x="744" y="209" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">MCC</text>
+  <text x="792" y="230" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">กด Validate</text>
+  <text x="792" y="242" fill="#6F8190" font-size="8" text-anchor="middle">ปลดล็อกเมื่อ precondition ครบ</text>
+
+  <!-- ★ Ad Validate — focal + clickable -->
+  <a class="hot" href="ad-validate-v2.html" aria-label="เปิดรายละเอียด Ad Validate — flow, logic และโครงสร้าง">
+    <rect x="704" y="460" width="176" height="64" rx="6" fill="#F8F9FB"/>
+    <rect class="plate" x="704" y="460" width="176" height="64" rx="6" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <rect x="712" y="468" width="32" height="12" rx="2" fill="transparent" stroke="rgba(127,112,239,.55)" stroke-width=".8"/>
+    <text x="728" y="477" fill="#7F70EF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">SYS</text>
+    <text x="792" y="498" fill="#3E4850" font-size="13" font-weight="600" text-anchor="middle">Ad Validate</text>
+    <text x="792" y="512" fill="#7F70EF" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".04em">background run · คลิกดู →</text>
+    <rect class="hit" x="704" y="460" width="176" height="64"/>
+  </a>
+
+  <!-- NEW · notify -->
+  <line x1="704" y1="492" x2="684" y2="492" stroke="#7F70EF" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+  <rect x="512" y="460" width="168" height="64" rx="6" fill="#F8F9FB"/>
+  <rect x="512" y="460" width="168" height="64" rx="6" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+  <rect x="520" y="468" width="44" height="12" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+  <text x="542" y="477" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">NOTIFY</text>
+  <rect x="640" y="468" width="32" height="12" rx="2" fill="#7F70EF"/>
+  <text x="656" y="477" fill="#FFFFFF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">NEW</text>
+  <text x="596" y="498" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">แจ้ง MCC ว่าตรวจเสร็จ</text>
+  <text x="596" y="512" fill="#6F8190" font-size="8" text-anchor="middle">In-app + LINE XPluser · Email สำรอง</text>
+
+  <!-- NEW · cron -->
+  <rect x="320" y="460" width="176" height="64" rx="6" fill="#F8F9FB"/>
+  <rect x="320" y="460" width="176" height="64" rx="6" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="328" y="468" width="36" height="12" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+  <text x="346" y="477" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">CRON</text>
+  <rect x="456" y="468" width="32" height="12" rx="2" fill="#7F70EF"/>
+  <text x="472" y="477" fill="#FFFFFF" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">NEW</text>
+  <text x="408" y="498" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">00:00 full re-scan</text>
+  <text x="408" y="512" fill="#6F8190" font-size="8" text-anchor="middle">ทุกงานที่ค้าง · digest ถึง MCC 08:30</text>
+
+  <!-- C6 · Send Mail -->
+  <rect x="904" y="192" width="144" height="56" rx="6" fill="#F8F9FB"/>
+  <rect x="904" y="192" width="144" height="56" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+  <rect x="912" y="200" width="32" height="12" rx="2" fill="transparent" stroke="rgba(62,72,80,.40)" stroke-width=".8"/>
+  <text x="928" y="209" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">MCC</text>
+  <text x="976" y="230" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">กด Send Mail</text>
+  <text x="976" y="242" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">ปลดล็อกเมื่อ completed</text>
+
+  <!-- C7 · Customer approve -->
+  <rect x="1088" y="360" width="144" height="56" rx="6" fill="#F8F9FB"/>
+  <rect x="1088" y="360" width="144" height="56" rx="6" fill="rgba(111,129,144,.10)" stroke="#A6B4BF" stroke-width="1"/>
+  <rect x="1096" y="368" width="36" height="12" rx="2" fill="transparent" stroke="rgba(166,180,191,.7)" stroke-width=".8"/>
+  <text x="1114" y="377" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">CUST</text>
+  <text x="1160" y="398" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">ลูกค้าอนุมัติงาน</text>
+  <text x="1160" y="410" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">customer approve</text>
+
+  <!-- C8 · Online -->
+  <rect x="1088" y="460" width="144" height="64" rx="6" fill="#F8F9FB"/>
+  <rect x="1088" y="460" width="144" height="64" rx="6" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+  <rect x="1096" y="468" width="32" height="12" rx="2" fill="transparent" stroke="rgba(111,129,144,.5)" stroke-width=".8"/>
+  <text x="1112" y="477" fill="#6F8190" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">SYS</text>
+  <text x="1160" y="498" fill="#3E4850" font-size="13" font-weight="600" text-anchor="middle">เปิดงานออนไลน์</text>
+  <text x="1160" y="512" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">campaign live</text>
+
+  <!-- ══ legend ══ -->
+  <line x1="32" y1="576" x2="1248" y2="576" stroke="rgba(62,72,80,.10)" stroke-width=".8"/>
+  <text x="32" y="596" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".14em">LEGEND</text>
+
+  <rect x="116" y="588" width="20" height="10" rx="3" fill="rgba(111,129,144,.10)" stroke="#A6B4BF" stroke-width="1"/>
+  <text x="144" y="596" fill="#6F8190" font-size="9">คน (TL / ลูกค้า)</text>
+
+  <rect x="256" y="588" width="20" height="10" rx="3" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+  <text x="284" y="596" fill="#6F8190" font-size="9">ขั้นตอนที่ MCC กด</text>
+
+  <rect x="416" y="588" width="20" height="10" rx="3" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+  <text x="444" y="596" fill="#6F8190" font-size="9">Ad Validate (คลิกได้)</text>
+
+  <rect x="596" y="588" width="20" height="10" rx="3" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+  <text x="624" y="596" fill="#6F8190" font-size="9">สถานะระบบ</text>
+
+  <line x1="736" y1="593" x2="772" y2="593" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4"/>
+  <text x="780" y="596" fill="#6F8190" font-size="9">ย้อนกลับ / วนซ้ำ</text>
+
+  <line x1="900" y1="593" x2="936" y2="593" stroke="#283DD7" stroke-width="1.2"/>
+  <text x="944" y="596" fill="#6F8190" font-size="9">ผลกลับจาก Ad Validate</text>
+
+  <rect x="1200" y="588" width="20" height="10" rx="2" fill="#7F70EF"/>
+  <text x="1226" y="596" fill="#6F8190" font-size="9">v2</text>
+  <polygon points="1108,588 1124,593 1108,598" fill="#7F70EF"/>
+  <text x="1132" y="596" fill="#6F8190" font-size="9">handoff หลัก</text>
+</svg>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <p class="eyebrow">ก่อนเข้า Ad Validate</p>
+    <div class="card-header"><span class="card-dot dot-muted"></span><h3>รอบนำเสนอ–แก้ไข</h3></div>
+    <ul>
+      <li>TL กรอกสิ่งที่ลูกค้าต้องเตรียม แล้ว Assign ให้ MCC — งานเริ่มที่สถานะ <code>Present</code></li>
+      <li>MCC กรอกวันที่นำเสนอ + แนบ Presentation link แล้วกด <code>Present</code></li>
+      <li>ลูกค้าขอแก้ → กด <code>Revision</code> งานเข้าสถานะ <code>Edit</code> วนซ้ำได้ไม่จำกัดรอบ</li>
+      <li>ลูกค้าไม่มีรายการแก้ → MCC กด <code>Validate</code> เท่านั้นจึงเปิด Ad Validate ได้</li>
+      <li>ปุ่ม <code>Validate</code> เองก็ถูกล็อกจนกว่าจะทำ precondition ใน New Job ครบตามลำดับ — Contact (Line OA → Plus AdTech) แล้วจึง Business information</li>
+    </ul>
+  </div>
+  <div class="card">
+    <p class="eyebrow">จุดเชื่อมต่อ</p>
+    <div class="card-header"><span class="card-dot dot-accent"></span><h3>Input / Output contract</h3></div>
+    <ul>
+      <li>ขาเข้า: <code>job_id</code>, <code>platform</code>, <code>website_url</code>, <code>ad_account_id</code>, expected budget/date, <code>return_url</code></li>
+      <li>ขาออก: <code>validation_run_id</code>, <code>status</code>, <code>rule_set_version</code>, <code>summary</code>, <code>completed_by</code></li>
+      <li>Ad Validate <b>ห้าม</b> อ้าง DOM หรือ state ภายใน Plug AI New Job — คุยผ่าน contract นี้เท่านั้น</li>
+    </ul>
+  </div>
+  <div class="card">
+    <p class="eyebrow">หลังจบ Validation</p>
+    <div class="card-header"><span class="card-dot dot-ink"></span><h3>นอกขอบเขต Ad Validate</h3></div>
+    <ul>
+      <li>New Job ปลดล็อกปุ่ม <code>Send Mail</code> เมื่อได้ <code>validation.completed</code></li>
+      <li>การส่งเมลและขั้นอนุมัติของลูกค้าอยู่นอกขอบเขตของ Ad Validate</li>
+      <li>สถานะจบที่ <code>Customer Approve</code> ก่อนเปิดงานออนไลน์จริง</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  <div class="bar">
+    <span>SOURCE · docs/PRD.md §2 + prototype vProceed()</span>
+    <a href="index.html">← กลับหน้ารวม</a>
+    <a href="ad-validate.html">Ad Validate — flow · logic · structure →</a>
+    <a href="rule-set.html">Rule set reference</a>
+    <a href="system-flow.html">System flow (sequence)</a>
+  </div>
+</footer>
+
+</body>
+</html>

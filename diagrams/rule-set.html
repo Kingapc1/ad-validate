@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ad Validate — Rule Set Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F8F9FB; --paper-2:#FFFFFF;
+    --ink:#3E4850; --muted:#6F8190; --soft:#A6B4BF;
+    --rule:rgba(62,72,80,.12); --rule-solid:#DBE1E5;
+    --accent:#7F70EF; --accent-tint:rgba(127,112,239,.10); --link:#283DD7;
+    --crit:#F5303A; --warn:#FFA800; --ok:#2FC639;
+    --font-sans:'Sarabun',sans-serif; --font-mono:'Roboto Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-sans)}
+  .page{width:min(1100px,100%);margin:0 auto;padding:0 32px}
+  header{padding-top:56px}
+  .eyebrow{font:500 11px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:36px;line-height:1.18;font-weight:500;margin:10px 0 0}
+  .lede{color:var(--muted);font-size:14px;line-height:1.8;max-width:780px;margin:12px 0 0}
+  nav.toc{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0 0}
+  nav.toc a{font:500 11px var(--font-mono);letter-spacing:.06em;text-decoration:none;color:var(--muted);
+    border:1px solid var(--rule);border-radius:6px;padding:7px 12px;background:var(--paper-2)}
+  nav.toc a:hover{border-color:var(--accent);color:var(--accent)}
+  section{padding-top:64px}
+  h2{font-size:24px;font-weight:500;margin:10px 0 0}
+  h3{font-size:17px;font-weight:600;margin:40px 0 0;display:flex;align-items:center;gap:10px}
+  .note{color:var(--muted);font-size:13px;line-height:1.8;max-width:780px;margin:10px 0 0}
+  .figure{margin:24px 0 0;overflow-x:auto}
+  svg{display:block;max-width:none}
+  svg text{font-family:var(--font-sans)}
+  .aside{font-style:italic;font-size:14px;color:var(--muted);line-height:1.8;border-left:2px solid var(--accent);
+    padding:2px 0 2px 16px;margin:24px 0 0;max-width:740px}
+  table{border-collapse:collapse;width:100%;margin:20px 0 0;font-size:12.5px;background:var(--paper-2);
+    border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+  th{text-align:left;font:500 10px var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    padding:11px 14px;border-bottom:1px solid var(--rule);background:var(--paper)}
+  td{padding:11px 14px;border-bottom:1px solid var(--rule);color:var(--muted);line-height:1.65;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td b{color:var(--ink);font-weight:600}
+  td a{color:var(--link);text-decoration:none} td a:hover{text-decoration:underline}
+  code{font-family:var(--font-mono);font-size:11px;background:rgba(127,112,239,.08);color:var(--link);
+    padding:1px 5px;border-radius:3px;word-break:break-word}
+  .phase{display:inline-block;font:500 10px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;
+    padding:4px 9px;border-radius:4px;vertical-align:3px}
+  .phase-1{background:var(--accent-tint);color:var(--accent);border:1px solid rgba(127,112,239,.4)}
+  .phase-2{background:rgba(62,72,80,.05);color:var(--muted);border:1px solid var(--rule)}
+  .badge{display:inline-block;font:500 10px var(--font-mono);letter-spacing:.06em;padding:3px 8px;
+    border-radius:3px;border:1px solid var(--rule);color:var(--muted);background:var(--paper);white-space:nowrap}
+  .b-crit{border-color:rgba(245,48,58,.45);color:#C41A22;background:rgba(245,48,58,.07)}
+  .b-warn{border-color:rgba(255,168,0,.5);color:#8A5A00;background:rgba(255,168,0,.10)}
+  .b-info{border-color:var(--rule);color:var(--muted)}
+  .b-fix{border-color:rgba(127,112,239,.4);color:var(--accent);background:var(--accent-tint)}
+  a.badge-link{border-color:rgba(40,61,215,.4);color:var(--link);background:rgba(40,61,215,.06);text-decoration:none;cursor:pointer}
+  a.badge-link:hover{background:rgba(40,61,215,.14)}
+  .rules{margin-top:20px;display:grid;gap:16px}
+  .rule{background:var(--paper-2);border:1px solid var(--rule);border-radius:6px;padding:20px 22px;scroll-margin-top:24px}
+  .rule.is-crit{border-left:3px solid var(--crit)}
+  .rule.is-warn{border-left:3px solid var(--warn)}
+  .rule.is-info{border-left:3px solid var(--soft)}
+  .rule-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .rid{font:500 12px var(--font-mono);letter-spacing:.08em;color:var(--ink)}
+  .rule h4{font-size:16px;font-weight:600;margin:12px 0 2px;color:var(--ink);line-height:1.45}
+  .rule .en{font:400 11.5px var(--font-mono);color:var(--soft);margin:0 0 4px}
+  dl{display:grid;grid-template-columns:132px 1fr;gap:0;margin:14px 0 0;font-size:13px;line-height:1.75}
+  dt{font:500 10px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);
+    padding:8px 0;border-top:1px solid var(--rule)}
+  dd{margin:0;padding:8px 0;color:var(--muted);border-top:1px solid var(--rule)}
+  dd ul,dd ol{margin:0;padding-left:17px}
+  dd li{margin:2px 0}
+  dd .srcline{display:block;margin:2px 0}
+  dd a{color:var(--link);text-decoration:none} dd a:hover{text-decoration:underline}
+  footer{margin-top:72px;padding:0 0 64px}
+  footer .bar{border-top:1px solid var(--rule);padding-top:14px;font:400 11px var(--font-mono);color:var(--muted);
+    letter-spacing:.06em;display:flex;gap:18px;flex-wrap:wrap}
+  footer a{color:var(--link);text-decoration:none} footer a:hover{text-decoration:underline}
+  @media(max-width:760px){dl{grid-template-columns:1fr}dt{border-top:1px solid var(--rule);padding-bottom:0}
+    dd{border-top:none;padding-top:2px}h1{font-size:27px}}
+  .apispec{margin-top:16px;border-top:2px solid rgba(127,112,239,.35);padding-top:14px}
+  .apispec-h{display:flex;align-items:center;gap:8px;font:600 11px var(--font-mono);letter-spacing:.08em;
+    text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+  .apispec-kind{font:500 9px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;
+    padding:2px 7px;border-radius:3px;border:1px solid rgba(127,112,239,.4);background:var(--accent-tint);color:var(--accent)}
+  .apispec-kind.web{border-color:rgba(111,129,144,.5);background:rgba(111,129,144,.10);color:var(--muted)}
+  .apispec-resource{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+  .apispec-resource code{font-size:11.5px}
+  pre.gaql{background:#1e2233;color:#e6e9f5;font-family:var(--font-mono);font-size:11px;line-height:1.65;
+    padding:12px 14px;border-radius:6px;overflow-x:auto;margin:0 0 12px;white-space:pre}
+  pre.gaql .k{color:#8fa6ee}
+  table.spectable{margin:0 0 12px;font-size:12px}
+  table.spectable th{padding:8px 12px;font-size:9px}
+  table.spectable td{padding:8px 12px}
+  table.spectable td:first-child code{font-size:11px}
+  .spec-enum{margin:0 0 12px;font-size:12.5px;color:var(--muted);line-height:1.7}
+  .spec-enum b{color:var(--ink);font-weight:600;display:block;margin-bottom:4px;font-size:11.5px}
+  .spec-enum ul{margin:0;padding-left:17px}
+  .spec-mutate,.spec-logic,.spec-caveat{font-size:12.5px;color:var(--muted);line-height:1.75;margin:0 0 10px}
+  .spec-mutate b,.spec-logic b,.spec-caveat b{color:var(--ink);font-weight:600}
+  .spec-caveat{padding:10px 12px;background:rgba(255,168,0,.08);border:1px solid rgba(255,168,0,.35);border-radius:6px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="eyebrow">Ad Validate · Rule set reference</div>
+  <h1>Rule set — เงื่อนไข วิธีตรวจ และแหล่งข้อมูลของแต่ละข้อ</h1>
+  <p class="lede">เอกสารอ้างอิงสำหรับทั้งผู้ใช้งานและทีมพัฒนา — แต่ละ rule บอกว่า<b>ตรวจอะไร</b>, <b>ตรวจด้วยวิธีไหน</b> (ดึง API ของแพลตฟอร์ม หรือสแกนหน้าเว็บไซต์จริง), <b>ความรุนแรงระดับไหน</b> และ<b>ถ้าไม่ผ่านต้องแก้อย่างไร</b> · ข้อมูลทั้งหมดถอดมาจาก rule set ใน prototype โดยตรง ไม่ได้เขียนใหม่</p>
+  <nav class="toc">
+    <a href="index.html">← หน้ารวม</a>
+    <a href="ad-validate.html">Ad Validate — flow &amp; logic</a>
+    <a href="#howto">01 · วิธีอ่าน rule</a>
+    <a href="#google">02 · Google Ads</a>
+    <a href="#meta">03 · Meta Ads</a>
+    <a href="#tiktok">04 · TikTok Ads</a>
+  </nav>
+</header>
+
+<p class="note" style="margin-top:20px;padding:14px 18px;background:var(--accent-tint);
+  border:1px solid rgba(127,112,239,.35);border-radius:6px;max-width:none">
+  <b>ขอบเขตของเฟสแรก:</b> ทำ <b>Google Ads</b> ก่อนอย่างเดียว (17 ข้อ) · Meta Ads (9 ข้อ) และ TikTok Ads (13 ข้อ)
+  เขียนเตรียมไว้ล่วงหน้าแล้วในหน้านี้เพื่อให้เห็นภาพรวมและออกแบบ rule engine ให้รองรับตั้งแต่ต้น แต่ยังไม่เข้าเฟสแรก ·
+  ทุกชุดต้อง review แยกจาก UI ก่อนขึ้น production เพราะข้อความใน prototype มีทั้ง mock data และ presentation scenario ปนอยู่
+</p>
+
+<!-- 01 HOW TO READ -->
+<section id="howto">
+  <div class="eyebrow">01 / Architecture</div>
+  <h2>วิธีอ่าน rule หนึ่งข้อ</h2>
+  <p class="note">ทุก rule ไม่ว่าแพลตฟอร์มไหน เดินผ่านเส้นทางเดียวกัน — ดึงข้อมูลจากแหล่งใดแหล่งหนึ่ง (หรือหลายแหล่ง) มาทำเป็น snapshot, ส่งให้ evaluator ประเมินตาม rule set เวอร์ชันที่ผูกกับ run นั้น, ได้ finding ที่มีทั้งสถานะและความรุนแรง แล้วจึงเสนอวิธีแก้ · <b>สิ่งที่ต่างกันระหว่าง rule คือแหล่งข้อมูลและวิธีแก้ ไม่ใช่เส้นทาง</b></p>
+
+  <div class="figure">
+  <svg width="1120" height="440" viewBox="0 0 1120 440" role="img" aria-labelledby="anat-title anat-desc">
+    <title id="anat-title">เส้นทางการประเมิน rule หนึ่งข้อ</title>
+    <desc id="anat-desc">ไดอะแกรมแสดงว่า rule แต่ละข้อดึงข้อมูลจากสามแหล่ง คือ API ของแพลตฟอร์มโฆษณา การสแกนหน้าเว็บไซต์จริง และ GTM กับ Plus AdTech API มารวมเป็น snapshot แล้วส่งให้ rule evaluator ที่ผูกกับเวอร์ชันของ rule set ประเมิน ได้ผลเป็น finding ที่มีสถานะและความรุนแรง จากนั้นจึงเสนอวิธีแก้ซึ่งเมื่อแก้แล้วจะวนกลับไปประเมินใหม่</desc>
+
+    <defs>
+      <marker id="an-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6F8190"/></marker>
+    </defs>
+    <rect width="1120" height="440" fill="#F8F9FB"/>
+
+    <rect x="32" y="72" width="256" height="264" rx="8" fill="rgba(62,72,80,.02)" stroke="rgba(62,72,80,.10)" stroke-width=".8"/>
+    <rect x="48" y="76" width="152" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="124" y="85" fill="rgba(62,72,80,.45)" font-size="7" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".14em">แหล่งข้อมูล</text>
+
+    <path d="M 272,132 H 312 Q 320,132 320,140 V 190 Q 320,198 328,198 H 352" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#an-arrow)"/>
+    <line x1="272" y1="212" x2="352" y2="212" stroke="#6F8190" stroke-width="1.2" marker-end="url(#an-arrow)"/>
+    <path d="M 272,292 H 312 Q 320,292 320,284 V 234 Q 320,226 328,226 H 352" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#an-arrow)"/>
+    <line x1="528" y1="212" x2="592" y2="212" stroke="#6F8190" stroke-width="1.2" marker-end="url(#an-arrow)"/>
+    <path d="M 784,212 H 808 Q 816,212 816,204 V 144 Q 816,136 824,136 H 848" fill="none" stroke="#6F8190" stroke-width="1.2" marker-end="url(#an-arrow)"/>
+    <line x1="960" y1="168" x2="960" y2="248" stroke="#6F8190" stroke-width="1.2" marker-end="url(#an-arrow)"/>
+    <path d="M 848,280 H 696 Q 688,280 688,272 V 240" fill="none" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#an-arrow)"/>
+
+    <rect x="532" y="192" width="56" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="560" y="201" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" text-anchor="middle" letter-spacing=".08em">EVALUATE</text>
+    <rect x="826" y="180" width="64" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="858" y="189" fill="#6F8190" font-size="9" text-anchor="middle">ผลลัพธ์</text>
+    <rect x="970" y="202" width="80" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="1010" y="211" fill="#6F8190" font-size="9" text-anchor="middle">ถ้าไม่ผ่าน</text>
+    <rect x="724" y="260" width="96" height="12" rx="2" fill="#F8F9FB"/>
+    <text x="772" y="269" fill="#6F8190" font-size="9" text-anchor="middle">แก้แล้วตรวจซ้ำ</text>
+
+    <rect x="48" y="104" width="224" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="48" y="104" width="224" height="56" rx="6" fill="rgba(62,72,80,.03)" stroke="rgba(62,72,80,.30)" stroke-width="1"/>
+    <text x="160" y="128" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">API ของแพลตฟอร์มโฆษณา</text>
+    <text x="160" y="146" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">google · meta · tiktok</text>
+
+    <rect x="48" y="184" width="224" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="48" y="184" width="224" height="56" rx="6" fill="rgba(62,72,80,.03)" stroke="rgba(62,72,80,.30)" stroke-width="1"/>
+    <text x="160" y="208" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">สแกนหน้าเว็บไซต์จริง</text>
+    <text x="160" y="226" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">tag health · script · event</text>
+
+    <rect x="48" y="264" width="224" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="48" y="264" width="224" height="56" rx="6" fill="rgba(62,72,80,.03)" stroke="rgba(62,72,80,.30)" stroke-width="1"/>
+    <text x="160" y="288" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">GTM + Plus AdTech API</text>
+    <text x="160" y="306" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">read-only · event config</text>
+
+    <rect x="352" y="184" width="176" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="352" y="184" width="176" height="56" rx="6" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+    <text x="440" y="208" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">Snapshot</text>
+    <text x="440" y="226" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">normalized · มีวันหมดอายุ</text>
+
+    <rect x="592" y="184" width="192" height="56" rx="6" fill="#F8F9FB"/>
+    <rect x="592" y="184" width="192" height="56" rx="6" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="688" y="208" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">Rule evaluator</text>
+    <text x="688" y="226" fill="#7F70EF" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">rule-set version ตายตัวต่อ run</text>
+
+    <rect x="848" y="104" width="224" height="64" rx="6" fill="#F8F9FB"/>
+    <rect x="848" y="104" width="224" height="64" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="960" y="130" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">Finding</text>
+    <text x="960" y="146" fill="#6F8190" font-size="9" text-anchor="middle">สถานะ: ผ่าน / ไม่ผ่าน / ตรวจเอง / ไม่เกี่ยว</text>
+    <text x="960" y="158" fill="#6F8190" font-size="9" text-anchor="middle">ความรุนแรง: Critical · Warning · Info</text>
+
+    <rect x="848" y="248" width="224" height="64" rx="6" fill="#F8F9FB"/>
+    <rect x="848" y="248" width="224" height="64" rx="6" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="960" y="274" fill="#3E4850" font-size="12" font-weight="600" text-anchor="middle">วิธีแก้</text>
+    <text x="960" y="290" fill="#6F8190" font-size="9" text-anchor="middle">ระบบแก้ให้ · ทีมแก้นอกระบบ · ยืนยันข้าม</text>
+    <text x="960" y="302" fill="#6F8190" font-size="9" font-family="'Roboto Mono',monospace" text-anchor="middle">บันทึก actor + before/after ทุกครั้ง</text>
+
+    <line x1="32" y1="380" x2="1088" y2="380" stroke="rgba(62,72,80,.10)" stroke-width=".8"/>
+    <text x="32" y="400" fill="#6F8190" font-size="8" font-family="'Roboto Mono',monospace" letter-spacing=".14em">LEGEND</text>
+    <rect x="116" y="392" width="20" height="10" rx="3" fill="rgba(62,72,80,.03)" stroke="rgba(62,72,80,.30)" stroke-width="1"/>
+    <text x="144" y="400" fill="#6F8190" font-size="9">แหล่งข้อมูลภายนอก</text>
+    <rect x="288" y="392" width="20" height="10" rx="3" fill="rgba(62,72,80,.05)" stroke="#6F8190" stroke-width="1"/>
+    <text x="316" y="400" fill="#6F8190" font-size="9">ข้อมูลที่แปลงแล้ว</text>
+    <rect x="448" y="392" width="20" height="10" rx="3" fill="rgba(127,112,239,.10)" stroke="#7F70EF" stroke-width="1.6"/>
+    <text x="476" y="400" fill="#6F8190" font-size="9">จุดที่ version ตายตัว</text>
+    <rect x="636" y="392" width="20" height="10" rx="3" fill="#FFFFFF" stroke="#3E4850" stroke-width="1"/>
+    <text x="664" y="400" fill="#6F8190" font-size="9">ผลที่ผู้ใช้เห็น</text>
+    <line x1="784" y1="397" x2="820" y2="397" stroke="#6F8190" stroke-width="1" stroke-dasharray="5,4"/>
+    <text x="828" y="400" fill="#6F8190" font-size="9">วนกลับไปประเมินใหม่หลังแก้</text>
+  </svg>
+  </div>
+
+  <h3>ความรุนแรง — ตัวที่ตัดสินว่างานไปต่อได้ไหม</h3>
+  <table>
+    <thead><tr><th style="width:130px">ระดับ</th><th style="width:170px">ผลต่อการไปต่อ</th><th>ความหมาย</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge b-crit">Critical</span></td><td><b>บล็อก</b></td><td>ถ้าไม่แก้ = ออนไลน์ไม่ได้ · backend ต้องปฏิเสธการกดดำเนินการต่อ ไม่ใช่แค่ซ่อนปุ่มใน UI</td></tr>
+      <tr><td><span class="badge b-warn">Warning</span></td><td>ผ่านได้เมื่อยืนยัน</td><td>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน และบันทึก actor + เหตุผล + เวลา</td></tr>
+      <tr><td><span class="badge b-info">Info</span></td><td>ไม่บล็อก</td><td>แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น</td></tr>
+      <tr><td><span class="badge b-info">Manual</span></td><td>นับเป็นค้าง</td><td>เป็นสถานะของ finding ไม่ใช่ระดับความรุนแรง — ต้องมีคนตรวจหรือแนบหลักฐาน และถูกนับรวมกับ Warning ตอนตัดสิน gate</td></tr>
+      <tr><td><span class="badge b-info">Not applicable</span></td><td>ไม่นับ</td><td>ไม่เกี่ยวกับงานนี้ เช่น rule เฉพาะ Display เมื่องานเป็น Search ล้วน · ไม่นับเป็นทั้ง pass และ fail</td></tr>
+    </tbody>
+  </table>
+
+  <h3>วิธีตรวจ — ระบบตัดสินเองได้แค่ไหน</h3>
+  <table>
+    <thead><tr><th style="width:170px">ประเภท</th><th>ความหมาย</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge">อัตโนมัติ</span></td><td>ระบบตัดสินผ่าน/ไม่ผ่านได้เองทั้งหมดจากข้อมูลที่ดึงมา ไม่ต้องรอคน</td></tr>
+      <tr><td><span class="badge">กึ่งอัตโนมัติ</span></td><td>ระบบดึงข้อมูลและเสนอผลให้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม ต้องมีคนกดยืนยัน</td></tr>
+      <tr><td><span class="badge">ตรวจเอง</span></td><td>ต้องมีคนตรวจและแนบหลักฐาน ระบบไม่ตัดสินให้</td></tr>
+    </tbody>
+  </table>
+
+  <h3>แหล่งข้อมูล — ดึงจาก API หรือต้องเปิดเว็บไปดู</h3>
+  <table>
+    <thead><tr><th style="width:200px">แหล่ง</th><th>ระบบทำอะไร</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge">Ads API · อ่าน</span></td><td>ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ — ต้องมี credential ที่อ่านบัญชีนั้นได้</td></tr>
+      <tr><td><span class="badge b-fix">Ads API · อ่าน + เขียน</span></td><td>ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้ — เป็นกลุ่มเดียวที่ทำ auto-fix ได้จริง</td></tr>
+      <tr><td><span class="badge">สแกนหน้าเว็บไซต์</span></td><td>Ad Optimizer โหลดหน้าเว็บจริง (landing / thank-you) แล้วตรวจ script tag, จำนวน loader และ event ที่ยิงออก — ไม่ผ่าน API ใดเลย</td></tr>
+      <tr><td><span class="badge">GTM API · อ่าน</span></td><td>อ่าน container ของเว็บไซต์เป้าหมายเพื่อ list tag และ trigger — อ่านอย่างเดียว แก้ให้ไม่ได้</td></tr>
+      <tr><td><span class="badge">Plus AdTech API</span></td><td>อ่าน event configuration ที่ตั้งไว้ฝั่ง Plus AdTech เพื่อเทียบกับ GTM</td></tr>
+      <tr><td><span class="badge">ข้อมูลใน DMS / New Job</span></td><td>เทียบกับค่าที่รับมาจาก job context เช่น Expect Date หรือ tracking method ที่ทีมเลือกไว้</td></tr>
+      <tr><td><span class="badge">ต้องมีคนยืนยัน</span></td><td>ระบบดึงข้อมูลให้ได้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม</td></tr>
+    </tbody>
+  </table>
+
+  <h3>วิธีแก้เมื่อไม่ผ่าน</h3>
+  <table>
+    <thead><tr><th style="width:200px">ประเภท</th><th>ขั้นตอน</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge b-fix">ระบบแก้ให้ได้</span></td><td>ระบบ preview การเปลี่ยนแปลงให้ดูก่อน ผู้ใช้กดยืนยัน แล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์ม · ต้องบันทึก before/after และประเมินซ้ำ</td></tr>
+      <tr><td><span class="badge">ทีมแก้นอกระบบ</span></td><td>เปิด deep link ไป Ads Manager / GTM / เว็บไซต์ ให้ทีมแก้เอง แล้วกลับมากด “ตรวจซ้ำ”</td></tr>
+      <tr><td><span class="badge">ยืนยันข้าม (exception)</span></td><td>ต้องมี permission, เหตุผล และหลักฐานจากผลตรวจจริง · ห้ามใช้ข้ามกรณีที่ไม่พบสัญญาณใดทำงานเลย</td></tr>
+      <tr><td><span class="badge">ไม่มี action</span></td><td>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</td></tr>
+    </tbody>
+  </table>
+
+  <p class="aside">กฎที่ใช้กับทุก rule: หนึ่ง run ผูกกับ rule-set version เดียวตลอดอายุของมัน — ถ้ามีการ publish rule ใหม่ระหว่างทาง run เดิมต้องยังแสดงผลด้วยเวอร์ชันเดิมเสมอ ไม่ประเมินใหม่ย้อนหลัง</p>
+</section>
+
+<!-- 02 GOOGLE -->
+<section id="google">
+  <div class="eyebrow">02 / Rule set</div>
+  <h2>Google Ads <span class="phase phase-1">Phase 1</span></h2>
+  <p class="note">ชุดที่จะทำจริงในเฟสแรก · ต้องยืนยัน mapping ของทุก resource กับ Google Ads API เวอร์ชันที่เลือกใช้ก่อนเริ่ม implement · rule set version <code>google-1.0.0</code> · ทั้งหมด <b>17 ข้อ</b> — Critical 5, Warning 11, Info 1 · ดึงผ่าน API 13 ข้อ, ต้องสแกนเว็บหรืออ่าน GTM 4 ข้อ, ระบบแก้ให้ได้เองโดยไม่ต้องออกนอกระบบ 7 ข้อ</p>
+
+  <h3>สรุปทั้งชุด</h3>
+  <table>
+    <thead><tr><th style="width:64px">ID</th><th style="width:230px">ตรวจอะไร</th><th style="width:90px">ระดับ</th><th style="width:105px">หมวด</th><th>แหล่งข้อมูล</th><th style="width:120px">วิธีแก้</th><th style="width:100px">Prototype</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#P-003"><b>P-003</b></a></td><td><b>สถานะ Conversion = Active / No recent conversions</b><br>Website Conversion Tracking</td><td><span class="badge b-crit">Critical</span></td><td>Configuration</td><td>Ads API · อ่าน</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-003">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-023"><b>P-023</b></a></td><td><b>Google Ads Tag ติดตั้งบนเว็บ + ยิงสัญญาณ</b><br>Google Ads Tag (global site tag)</td><td><span class="badge b-crit">Critical</span></td><td>Configuration</td><td>สแกนหน้าเว็บไซต์</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-023">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-025"><b>P-025</b></a></td><td><b>Plus AdTech script — ตรวจ 3 จุด</b><br>Plus AdTech script</td><td><span class="badge b-crit">Critical</span></td><td>Configuration</td><td>สแกนหน้าเว็บไซต์</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-025">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-027"><b>P-027</b></a></td><td><b>วิธีติด Conversion Tag — ตรวจ 2 จุด</b><br>Conversion Tag Method</td><td><span class="badge b-crit">Critical</span></td><td>Configuration</td><td>Ads API · อ่าน · ข้อมูลใน DMS / New Job · ต้องมีคนยืนยัน</td><td>ตรวจ + ยืนยันเหตุผล</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-027">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-028"><b>P-028</b></a></td><td><b>Plus AdTech ชนกับ GTM เดิม — ตรวจ 2 จุด</b><br>Plus AdTech vs GTM Conflict</td><td><span class="badge b-crit">Critical</span></td><td>Configuration</td><td>Plus AdTech API · GTM API · อ่าน</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-028">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-001"><b>P-001</b></a></td><td><b>เปิด Auto-apply 3 หัวข้อ</b><br>Auto-apply Recommendations</td><td><span class="badge b-warn">Warning</span></td><td>Setup</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-001">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-008"><b>P-008</b></a></td><td><b>Location ระบุจังหวัด ไม่ใช่ Thailand ทั้งประเทศ</b><br>Location Setting</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-008">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-011"><b>P-011</b></a></td><td><b>Asset ครบ Call / Sitelink / Snippet / Callout</b><br>Extensions / Assets</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>Ads API · อ่าน</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-011">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-013"><b>P-013</b></a></td><td><b>Ad Strength = Excellent / Good</b><br>Ad Strength</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>Ads API · อ่าน</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-013">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-014"><b>P-014</b></a></td><td><b>Search: มี negative keyword ชุดพื้นฐาน</b><br>Basic Negative Keywords</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-014">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-024"><b>P-024</b></a></td><td><b>GA4 Tag ติดตั้งบนเว็บ + ยิงสัญญาณ</b><br>GA4 Tag</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>สแกนหน้าเว็บไซต์</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-024">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-026"><b>P-026</b></a></td><td><b>Search: ปิด Display Network</b><br>Search Network / Display Network</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-026">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-004"><b>P-004</b></a></td><td><b>ตั้ง Primary / Secondary conversion</b><br>Primary / Secondary Conversion</td><td><span class="badge b-warn">Warning</span></td><td>Customization</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-004">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-009"><b>P-009</b></a></td><td><b>Location option = Presence / Presence-or-interest</b><br>Location Option</td><td><span class="badge b-warn">Warning</span></td><td>Customization</td><td>Ads API · อ่าน</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-009">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-015"><b>P-015</b></a></td><td><b>GDN: ยกเว้นแอปมือถือ</b><br>GDN Mobile App Exclusion</td><td><span class="badge b-warn">Warning</span></td><td>Customization</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-015">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-017"><b>P-017</b></a></td><td><b>YouTube: ยกเว้นแอปมือถือ</b><br>YouTube Mobile App Exclusion</td><td><span class="badge b-warn">Warning</span></td><td>Customization</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-017">Prototype ↗</a></td></tr>
+      <tr><td><a href="#P-010"><b>P-010</b></a></td><td><b>Language ตรงกลุ่มเป้าหมาย</b><br>Language</td><td><span class="badge b-info">Info</span></td><td>Customization</td><td>Ads API · อ่าน · ต้องมีคนยืนยัน</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-010">Prototype ↗</a></td></tr>
+    </tbody>
+  </table>
+
+  <h3><span class="badge b-crit">Critical</span> 5 ข้อ — ถ้าไม่แก้ = ออนไลน์ไม่ได้ · บล็อกปุ่มดำเนินการต่อจาก backend policy</h3>
+  <div class="rules">
+    <article class="rule is-crit" id="P-003">
+      <div class="rule-head">
+      <span class="rid">P-003</span>
+      <span class="badge b-crit">Critical</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-003">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>สถานะ Conversion = Active / No recent conversions</h4>
+      <p class="en">Website Conversion Tracking</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd>ใช้ classifier ตัวเดียวกับ <b>Ad Optimizer › Conversion Tag Health</b> (<code>classifyConversionAction</code>, Jira MC-5705) ห้ามเขียน logic ซ้ำใน Ad Validate · ดู spec <code>docs/superpowers/specs/2026-09-29-p003-conversion-tag-health-design.md</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน Google Ads API อย่างเดียว ไม่เขียนกลับ · เก็บทุกแถวเป็น snapshot ของ run</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>การ์ดแสดงตาราง conversion action รายตัวพร้อมป้าย Health และบรรทัด “สิ่งที่ต้องทำ” จากแถวที่รุนแรงที่สุด</p><ol><li>ทีมเว็บตรวจ tag / event snippet ของ action ที่เป็น Broken หรือ Needs attention</li><li>ยิง test conversion ผ่าน Tag Assistant</li><li>กด “แก้แล้ว · ให้ระบบตรวจซ้ำ” เพื่อดึงข้อมูลและประเมินใหม่ทั้งการ์ด</li></ol></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไป Ad Optimizer (<code>ads-optimizer/overview/detail/detect-conversion-tag-health</code>) หรือ Google Ads แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>severity ขึ้นกับผล: มี <b>Primary เป็น Broken</b> หรือไม่มี action ที่ ENABLED หรือดึงข้อมูลไม่สำเร็จ = <b>Critical</b> (บล็อก) · มี Needs attention (หรือ Secondary มีปัญหา) = <b>Warning</b> (ไปต่อได้เมื่อยืนยัน) · มีแต่ Need more data = <b>ผ่าน</b> รอยืนยันหลังออนไลน์ (ไม่บล็อกงานเปิดใหม่)</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> conversion_action (2 query — ห้ามรวม <code>metrics.conversion_last_*</code> กับ <code>segments.date</code> เพราะ Google คืน <code>[]</code> โดยไม่แจ้ง error)</div>
+      <pre class="gaql">-- Q1 inventory + วันที่ล่าสุด (ไม่มีช่วงวันที่)
+SELECT
+  conversion_action.id,
+  conversion_action.name,
+  conversion_action.status,
+  conversion_action.category,
+  conversion_action.origin,
+  conversion_action.primary_for_goal,
+  conversion_action.type,
+  metrics.conversion_last_conversion_date,
+  metrics.conversion_last_received_request_date_time
+FROM conversion_action
+WHERE conversion_action.status = &#x27;ENABLED&#x27;
+
+-- Q2 จำนวน conversion ใน lookback
+SELECT conversion_action.id, metrics.all_conversions
+FROM conversion_action
+WHERE segments.date DURING LAST_30_DAYS</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>conversion_action.status</code></td><td>enum <code>ConversionActionStatusEnum</code></td><td>กรองเฉพาะ <code>ENABLED</code> ที่ Q1 — <code>REMOVED</code>/<code>HIDDEN</code> ไม่แสดง ไม่นับ</td></tr><tr><td><code>conversion_action.origin</code></td><td>enum</td><td>ป้ายที่อิงเวลาและ <code>Tag fires, no conversions</code> ใช้ได้เฉพาะ <code>WEBSITE</code></td></tr><tr><td><code>conversion_action.primary_for_goal</code></td><td>bool</td><td>นับเข้าผลตรวจเฉพาะ Primary · Secondary ที่มีปัญหาทำให้การ์ดเป็นสูงสุดแค่ Warning</td></tr><tr><td><code>metrics.all_conversions</code> (30 วัน)</td><td>double</td><td>≥ 1 = <code>Receiving signals</code> ทันที</td></tr><tr><td><code>metrics.conversion_last_received_request_date_time</code></td><td>datetime</td><td>สัญญาณ tag ล่าสุด — ใช้คิด “เงียบ” 3 / 7 / 14 วัน</td></tr><tr><td><code>metrics.conversion_last_conversion_date</code></td><td>date</td><td>conversion จริงครั้งล่าสุด — แสดงในคอลัมน์ Last conversion</td></tr></tbody></table>
+      <div class="spec-logic"><b>Logic (ต่อ action, ป้ายหลัก 1 ป้าย ที่เหลือเป็น related):</b> conversion ≥ 1 ใน 30 วัน → <code>Receiving signals</code> · conversion = 0 และ (clicks &lt; 20 หรือ action อายุ &lt; 7 วัน) → <code>Need more data</code> · Website + tag ยิงภายใน 3 วัน → <code>Tag fires, no conversions</code> · Website เงียบ &gt; 14 / &gt; 7 / &gt; 3 วัน → <code>Possibly inactive</code> (Broken) / <code>Stale signal</code> / <code>Signal delayed</code> · origin อื่น → <code>Need more data</code> · เกณฑ์ทั้งหมดอ่านจาก config ชุดเดียวกับ Ad Optimizer ลำดับจริงยึดโค้ด <code>conversion-tag-health.domain.ts</code><br><b>Verdict ของการ์ด:</b> Primary Broken → Critical · Needs attention → Warning · Need more data ทั้งหมด → ผ่าน (รอยืนยันหลังออนไลน์)</div>
+      </div>
+    </article>
+    <article class="rule is-crit" id="P-023">
+      <div class="rule-head">
+      <span class="rid">P-023</span>
+      <span class="badge b-crit">Critical</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-023">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Google Ads Tag ติดตั้งบนเว็บ + ยิงสัญญาณ</h4>
+      <p class="en">Google Ads Tag (global site tag)</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>Ad Optimizer tag-health scan — ตรวจ gtag/js + config AW-* บนหน้า landing / thank-you</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">สแกนหน้าเว็บไซต์</span> — Ad Optimizer โหลดหน้าเว็บจริงแล้วตรวจ script / tag / event ที่ยิงออก</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>ถ้าไม่แก้ = ออนไลน์ไม่ได้ · บล็อกปุ่มดำเนินการต่อจาก backend policy</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind web">Website scan</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> หน้าเว็บไซต์จริง (landing / thank-you) — ไม่ใช่ Google Ads API</div>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>Network request</code></td><td>HTTP request</td><td>หา request ไปยัง <code>googletagmanager.com/gtag/js?id=AW-XXXXXXXXX</code> หรือ inline script ที่เรียก <code>gtag('config', 'AW-XXXXXXXXX')</code></td></tr><tr><td><code>Conversion ID ที่คาดหวัง</code></td><td>string</td><td>มาจาก <code>customer.conversion_tracking_setting.conversion_tracking_id</code> ที่อ่านจาก Ads API — ใช้เป็นค่าที่ต้องไปหาให้เจอบนหน้าเว็บ</td></tr></tbody></table>
+      <div class="spec-logic"><b>Logic:</b> fail เมื่อไม่พบ request ที่มี conversion ID ตรงกัน หรือพบแต่ response status ≠ 200</div>
+      <div class="spec-caveat"><b>ข้อควรระวัง:</b> รู้ “ต้องหา AW-id อะไร” จาก Ads API แต่การยืนยันว่า “ติดจริงบนเว็บ” ต้องสแกนหน้าเว็บเสมอ — Ads API บอกไม่ได้ว่าเว็บติด tag จริงหรือไม่</div>
+      </div>
+    </article>
+    <article class="rule is-crit" id="P-025">
+      <div class="rule-head">
+      <span class="rid">P-025</span>
+      <span class="badge b-crit">Critical</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-025">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Plus AdTech script — ตรวจ 3 จุด</h4>
+      <p class="en">Plus AdTech script</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>Ad Optimizer tag-health scan — ตรวจ &lt;script src&gt;, จำนวน loader instance, และ domain gateway.autodigi.net บนหน้า landing</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">สแกนหน้าเว็บไซต์</span> — Ad Optimizer โหลดหน้าเว็บจริงแล้วตรวจ script / tag / event ที่ยิงออก</span></dd>
+      <dt>ทำไมต้องมี</dt><dd>ถ้าไม่มี Plus AdTech script ระบบ Ad Performance / health monitor จะมองไม่เห็นบัญชีนี้เลยหลังออนไลน์ · ถ้าโหลดซ้ำหรือมี Autodigi ทับ conversion จะถูกนับซ้ำ ตัวเลขทุกอย่างเพี้ยน</dd>
+      <dt>ตรวจย่อย</dt><dd><ul><li><b>มี Plus AdTech script บนเว็บ</b> — bundle.js จาก gateway.plus-adtech.com โหลดสำเร็จ (200) ทุกหน้าหลัก</li><li><b>ไม่โหลดซ้ำ (duplicate)</b> — Plus AdTech loader ต้องมีชุดเดียวต่อหน้า</li><li><b>ไม่มี Autodigi เก่าทับ</b> — ต้องไม่มี bundle gateway.autodigi.net โหลดคู่กับ Plus AdTech</li></ul></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>ถ้าไม่แก้ = ออนไลน์ไม่ได้ · บล็อกปุ่มดำเนินการต่อจาก backend policy</dd>
+      <dt>หมายเหตุ</dt><dd>ถ้า sub-check ข้อใดข้อหนึ่งไม่ผ่าน ทั้ง rule ถือว่าไม่ผ่าน — ต้องครบทั้ง 3 จุด</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind web">Website scan</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> หน้าเว็บไซต์จริง — ไม่ใช่ Google Ads API</div>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>script[src] domain check</code></td><td>HTTP request</td><td>ต้องพบ <code>&lt;script src="https://gateway.plus-adtech.com/bundle.js"&gt;</code> โหลดสำเร็จ (200) บนทุกหน้าหลัก</td></tr><tr><td><code>จำนวน loader instance</code></td><td>count</td><td>นับจำนวน script tag ที่ match domain เดียวกัน — ต้องมีแค่ 1 ชุดต่อหน้า ไม่ใช่โหลดซ้ำ</td></tr><tr><td><code>legacy domain check</code></td><td>HTTP request</td><td>ต้อง<b>ไม่</b>พบ <code>gateway.autodigi.net</code> โหลดคู่กันบนหน้าเดียวกัน</td></tr></tbody></table>
+      <div class="spec-logic"><b>Logic:</b> fail รวมเมื่อ sub-check ข้อใดข้อหนึ่งไม่ผ่าน (ไม่มี / โหลดซ้ำ / มี Autodigi ทับ) — ต้องผ่านครบทั้ง 3 จุด</div>
+      </div>
+    </article>
+    <article class="rule is-crit" id="P-027">
+      <div class="rule-head">
+      <span class="rid">P-027</span>
+      <span class="badge b-crit">Critical</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">กึ่งอัตโนมัติ</span>
+      <span class="badge">ตรวจ + ยืนยันเหตุผล</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-027">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>วิธีติด Conversion Tag — ตรวจ 2 จุด</h4>
+      <p class="en">Conversion Tag Method</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>อ่าน: Google Ads conversion_action.origin/creation_source + status เทียบกับ Plus AdTech signature · เขียนจาก field ภายในระบบ DMS — job.tracking_method, job.exception_reason</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ข้อมูลใน DMS / New Job</span> — เทียบกับค่าที่รับมาจาก job context เช่น Expect Date หรือ tracking method</span>
+        <span class="srcline"><span class="badge">ต้องมีคนยืนยัน</span> — ระบบดึงข้อมูลให้ได้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม</span></dd>
+      <dt>ทำไมต้องมี</dt><dd>ต้องตรวจสอบกับ Google Ads Manager ก่อนเสมอว่ามี conversion ที่กำลังทำงานจริงหรือไม่ — ถ้าเจอว่าสร้างจาก Plus AdTech จะผ่านอัตโนมัติ ถ้าเจอ tracking อื่นที่ทำงานอยู่ต้องยืนยันเหตุผลก่อนถึงจะผ่านได้ และถ้าไม่พบสัญญาณใดๆ เลยจะยืนยันข้ามไม่ได้ ต้องแก้ไขการติดตั้งก่อน — ป้องกันไม่ให้พิมพ์เหตุผลผ่านได้โดยไม่มีการตรวจสอบจริงมารองรับ</dd>
+      <dt>ตรวจย่อย</dt><dd><ul><li><b>จุดที่ 1 — ตรวจแหล่งที่มาอัตโนมัติ</b> — อ่าน <code>conversion_action.origin</code> / <code>creation_source</code> จาก Google Ads API ของทุก conversion ที่กำลังยิงสัญญาณ (firing) แล้วเทียบกับลายเซ็นของ Plus AdTech — ตรง → สรุปว่าสร้างจาก Plus AdTech และผ่านจุดนี้ทันที (ผ่านทั้ง rule) — ไม่ตรงแต่ยังมีสัญญาณ → ระบบ<b>สันนิษฐานไว้ก่อนว่าน่าจะสร้างจาก GTM</b> (เครื่องมือทางเลือกหลักที่ทีมใช้กัน) แต่ยังไม่ถือว่าผ่าน ต้องไปจุดที่ 2 — ไม่พบสัญญาณใดยิงเลย → ไม่ผ่านจุดนี้ และบล็อกทันที ไม่มีจุดที่ 2 ให้ทำต่อ</li><li><b>จุดที่ 2 — ผู้ใช้ยืนยันเครื่องมือที่ใช้จริง</b> — เปิดให้ทำเฉพาะกรณีจุดที่ 1 เจอสัญญาณจากแหล่งอื่นที่ไม่ใช่ Plus AdTech — <b>ผู้ใช้ต้องเลือกยืนยันเองว่าใช้เครื่องมือใดสร้าง conversion นั้นจริง</b> (ค่าที่ระบบสันนิษฐานไว้ให้คือ GTM แต่ผู้ใช้แก้ให้ตรงความจริงได้ ไม่ใช่ยึดตามระบบเดา) พร้อมระบุเหตุผลที่ไม่ใช้ Plus AdTech — ยืนยันแล้วจึงผ่านทั้ง rule · prototype ปัจจุบันรองรับแค่ checkbox ยืนยัน “GTM Manual” ตัวเดียว ยังไม่ใช่ตัวเลือกเครื่องมือแบบเลือกได้หลายแบบ</li></ul></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ต้องกดตรวจกับ Google Ads Manager ก่อน ระบบจึงเปิดทางให้ยืนยันเหตุผล (exception) ตามผลที่ Inspector เจอจริง · ไม่มีทางข้ามถ้าไม่เจอสัญญาณใดเลย</dd>
+      <dt>ผลต่อ gate</dt><dd>ถ้าไม่แก้ = ออนไลน์ไม่ได้ · บล็อกปุ่มดำเนินการต่อจาก backend policy</dd>
+      <dt>หมายเหตุ</dt><dd>เงื่อนไขที่มี logic ซับซ้อนที่สุดในชุดนี้ — มี 4 ผลลัพธ์ (ยังไม่ตรวจ / ผ่านอัตโนมัติ / ผ่านเมื่อยืนยัน / บล็อกถาวร) แยกเป็น 2 จุดตามตารางด้านบน — ทางยืนยันเหตุผลของจุดที่ 2 จะเปิดก็ต่อเมื่อจุดที่ 1 เจอสัญญาณจริงเท่านั้น ถ้าไม่เจอสัญญาณใดเลยจะบล็อกถาวร ข้ามไม่ได้ <a href="ad-validate.html#p027">ดู decision tree เต็มใน §04</a></dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Mixed source</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> conversion_action + ข้อมูลภายในของ Plus AdTech</div>
+      <pre class="gaql">-- จุดที่ 1a: ดึง conversion action ทั้งหมดที่ enabled
+SELECT
+  conversion_action.id,
+  conversion_action.resource_name,
+  conversion_action.name,
+  conversion_action.type,
+  conversion_action.status
+FROM conversion_action
+WHERE conversion_action.status = &#x27;ENABLED&#x27;
+
+-- จุดที่ 1b: เช็คว่า action ไหนกำลัง &quot;firing&quot; จริงในช่วงล่าสุด
+SELECT
+  segments.conversion_action,
+  segments.conversion_action_name,
+  metrics.conversions,
+  segments.date
+FROM campaign
+WHERE segments.date DURING LAST_7_DAYS</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>conversion_action.origin</code></td><td>enum <code>ConversionActionOriginEnum</code></td><td>แหล่งกำเนิดระดับ platform เท่านั้น (เช่น <code>WEBSITE</code>, <code>GOOGLE_PLAY</code>) — <b>ไม่ได้บอกว่าเครื่องมือไหนสร้าง</b> tag ให้ (ดู caveat)</td></tr><tr><td><code>conversion_action.type</code></td><td>enum <code>ConversionActionTypeEnum</code></td><td>วิธีติดตาม เช่น <code>WEBPAGE</code> (global site tag ทั่วไป), <code>GOOGLE_ANALYTICS_4</code> (import จาก GA4), <code>UPLOAD_CLICKS</code> (Enhanced Conversions / offline import)</td></tr><tr><td><code>segments.conversion_action / segments.conversion_action_name</code></td><td>segment</td><td>ใช้ join กับ resource รายงาน (เช่น <code>campaign</code>) เพื่อดึง <code>metrics.conversions</code> แยกตาม conversion action แต่ละตัว</td></tr><tr><td><code>metrics.conversions</code></td><td>double</td><td>จำนวน conversion ที่เกิดจริงในช่วงวันที่ระบุ — ใช้ตัดสินว่า action นั้น “firing” หรือไม่ (>0 ในช่วง lookback ที่ตกลงกัน เช่น 7 วัน)</td></tr></tbody></table>
+      <div class="spec-mutate"><b>เขียน/แก้ไข:</b> ไม่มีการเขียนกลับ Google Ads API ในกฎนี้ — ผลของจุดที่ 2 (ผู้ใช้ยืนยันเครื่องมือที่ใช้จริง) ถูกเขียนเป็น field ภายในระบบ DMS เอง: <code>job.tracking_method</code>, <code>job.exception_reason</code></div>
+      <div class="spec-logic"><b>Logic:</b> จุดที่ 1: ดึง conversion action ที่ <code>status = ENABLED</code> ทั้งหมด กรองเฉพาะตัวที่ <code>metrics.conversions &gt; 0</code> ในช่วง lookback แล้วเทียบ <code>resource_name</code> ของแต่ละตัวกับรายชื่อ conversion action ที่ Plus AdTech บันทึกไว้ว่าตัวเองเป็นผู้สร้าง (เก็บฝั่ง Plus AdTech backend ไม่ใช่ฟิลด์ใน Ads API) — ตรงกัน = สร้างจาก Plus AdTech ผ่านอัตโนมัติ · ไม่ตรงแต่ยัง firing = ต้องไปจุดที่ 2 · ไม่มีตัวไหน firing เลย = บล็อก</div>
+      <div class="spec-caveat"><b>ข้อควรระวัง:</b> Google Ads API <b>ไม่มีฟิลด์ที่บอกตรง ๆ ว่า conversion action ถูกสร้างโดยเครื่องมือ/เว็บไซต์ไหน</b> — <code>origin</code>/<code>type</code> บอกได้แค่ระดับ platform (เว็บไซต์ vs แอป vs import) ไม่ใช่ระดับ vendor tag ดังนั้น “ตรงกับลายเซ็น Plus AdTech” ในทางปฏิบัติต้องเป็นการ <b>join กับรายการที่ Plus AdTech บันทึกเองว่าเคยสร้าง resource_name ไหนไว้บ้าง</b> ไม่ใช่การอ่านฟิลด์ <code>creation_source</code> ที่ prototype อ้างถึง (ฟิลด์นี้ไม่มีอยู่จริงใน API) — ต้องออกแบบตาราง mapping นี้ฝั่ง Plus AdTech เอง</div>
+      </div>
+    </article>
+    <article class="rule is-crit" id="P-028">
+      <div class="rule-head">
+      <span class="rid">P-028</span>
+      <span class="badge b-crit">Critical</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-028">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Plus AdTech ชนกับ GTM เดิม — ตรวจ 2 จุด</h4>
+      <p class="en">Plus AdTech vs GTM Conflict</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>อ่าน: Plus AdTech event configuration API + GTM API (read-only) — list tags/triggers ของ container ที่ผูกกับเว็บไซต์นี้ เทียบ event name + trigger condition</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Plus AdTech API</span> — อ่าน event configuration ที่ตั้งไว้ฝั่ง Plus AdTech</span>
+        <span class="srcline"><span class="badge">GTM API · อ่าน</span> — อ่าน container ของเว็บไซต์เป้าหมายเพื่อดู tag และ trigger — ไม่แก้ให้</span></dd>
+      <dt>ทำไมต้องมี</dt><dd>ถ้ามี 2 tag ยิง event เดียวกัน Google Ads จะนับ conversion ซ้ำ ตัวเลขจะสูงกว่าความจริง</dd>
+      <dt>ตรวจย่อย</dt><dd><ul><li><b>Plus AdTech ตั้งค่า event ครบ</b> — ต้องมี event configuration ที่ Plus AdTech อย่างน้อย 1 event ตรงกับ conversion ที่ผูกกับงานนี้</li><li><b>ไม่มี GTM tag เดิมยิง event ซ้ำ</b> — scan GTM container ของเว็บไซต์เป้าหมาย ต้องไม่พบ tag ที่ trigger event เดียวกันกับที่ Plus AdTech ยิง (เทียบจาก event name + trigger condition)</li></ul></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>ถ้าไม่แก้ = ออนไลน์ไม่ได้ · บล็อกปุ่มดำเนินการต่อจาก backend policy</dd>
+      <dt>เงื่อนไขก่อนประเมิน</dt><dd>ประเมินเมื่อ <code>P-027</code> อยู่ในสถานะ <code>pass</code> และ <code>trackingMethod = adtech</code></dd>
+      <dt>หมายเหตุ</dt><dd>เป็น conditional rule — จะถูกประเมินก็ต่อเมื่อ P-027 ผ่านและ <code>trackingMethod = adtech</code> เท่านั้น ถ้าทีมยืนยันใช้ GTM Manual แทน rule นี้จะไม่ปรากฏและไม่ถูกนับใน gate</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Mixed source</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> Plus AdTech event configuration API + GTM API (read-only)</div>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>Plus AdTech: event configuration</code></td><td>API ภายใน</td><td>ต้องมี event ที่ตั้งค่าไว้อย่างน้อย 1 event ตรงกับ conversion ที่ผูกกับงานนี้</td></tr><tr><td><code>GTM: tags[] / triggers[] ของ container เป้าหมาย</code></td><td>GTM API (read-only)</td><td>list tag ทั้งหมดในเว็บไซต์นี้ เทียบ event name + trigger condition กับสิ่งที่ Plus AdTech ตั้งไว้</td></tr></tbody></table>
+      <div class="spec-logic"><b>Logic:</b> fail เมื่อ (a) Plus AdTech ยังไม่ตั้งค่า event หรือ (b) พบ GTM tag เดิมที่ trigger event ชื่อเดียวกันยังทำงานอยู่คู่กัน — ต้องแก้ทั้ง 2 จุดจึงผ่าน</div>
+      <div class="spec-caveat"><b>ข้อควรระวัง:</b> ทำงานเฉพาะเมื่อ P-027 ผ่านด้วย <code>trackingMethod = adtech</code> เท่านั้น (ดู visibleIf)</div>
+      </div>
+    </article>
+  </div>
+
+  <h3><span class="badge b-warn">Warning</span> 11 ข้อ — ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</h3>
+  <div class="rules">
+    <article class="rule is-warn" id="P-001">
+      <div class="rule-head">
+      <span class="rid">P-001</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Setup</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-001">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>เปิด Auto-apply 3 หัวข้อ</h4>
+      <p class="en">Auto-apply Recommendations</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>recommendation_subscription (อ่าน) · RecommendationSubscriptionService.MutateRecommendationSubscriptions (เขียน) — เฉพาะ type ที่รองรับ</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ตรวจย่อย</dt><dd><ul><li><b>Use optimized ad rotation</b> · <code>OPTIMIZE_AD_ROTATION</code> · ส่งเปิดผ่าน API ได้</li><li><b>Adjust your CPA targets</b> · <code>RAISE_TARGET_CPA + LOWER_TARGET_CPA</code> · ส่งเปิดผ่าน API ได้</li><li><b>Adjust your ROAS targets</b> · <code>RAISE_TARGET_ROAS + LOWER_TARGET_ROAS</code> · ส่งเปิดผ่าน API ได้</li></ul></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      <dt>หมายเหตุ</dt><dd>เปิดได้เฉพาะ recommendation type ที่ API รองรับ subscription เท่านั้น — type ที่ไม่รองรับต้องไปเปิดเองใน Google Ads</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> recommendation_subscription</div>
+      <pre class="gaql">SELECT
+  recommendation_subscription.recommendation_type,
+  recommendation_subscription.status
+FROM recommendation_subscription</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>recommendation_subscription.recommendation_type</code></td><td>enum <code>RecommendationTypeEnum</code></td><td>ประเภท recommendation ที่บัญชีนี้เปิดให้ subscribe อัตโนมัติได้ — ไม่ใช่ทุก type รองรับ</td></tr><tr><td><code>recommendation_subscription.status</code></td><td>enum</td><td>สถานะการติดตามของ subscription แต่ละประเภท — เปิดอยู่ (subscribed) หรือไม่</td></tr></tbody></table>
+      <div class="spec-enum"><b>RecommendationTypeEnum (ที่ใช้ในกฎนี้)</b><ul><li><code>OPTIMIZE_AD_ROTATION</code> — หมุนแสดงโฆษณาที่ทำผลงานดีที่สุดอัตโนมัติ</li><li><code>RAISE_TARGET_CPA / LOWER_TARGET_CPA</code> — ปรับ Target CPA ขึ้น/ลงตามข้อมูลผลงานล่าสุด</li><li><code>RAISE_TARGET_ROAS / LOWER_TARGET_ROAS</code> — ปรับ Target ROAS ขึ้น/ลงตามข้อมูลผลงานล่าสุด</li></ul></div>
+      <div class="spec-mutate"><b>เขียน/แก้ไข:</b> <code>RecommendationSubscriptionService.MutateRecommendationSubscriptions</code> — ส่ง operation <code>update</code> พร้อม resource_name ของ subscription แต่ละประเภท เปลี่ยน <code>status</code> เป็นเปิดใช้ (ครั้งละ 1 ประเภท)</div>
+      <div class="spec-logic"><b>Logic:</b> ผ่านเมื่อ subscription ทั้ง 3 ประเภทที่ระบบกำหนดไว้มีสถานะเปิดครบ · ไม่ผ่านเมื่อขาดไปอย่างน้อย 1 ประเภท และแสดงเฉพาะประเภทที่ยังไม่เปิดให้กดเปิดทีละรายการหรือทั้งหมด</div>
+      <div class="spec-caveat"><b>ข้อควรระวัง:</b> ไม่ใช่ทุก <code>RecommendationTypeEnum</code> รองรับการ subscribe ผ่าน API — ต้องตรวจสอบรายการที่รองรับจริงของ API เวอร์ชันที่เลือกใช้ก่อน hardcode 3 ประเภทนี้ตายตัว</div>
+      </div>
+    </article>
+    <article class="rule is-warn" id="P-008">
+      <div class="rule-head">
+      <span class="rid">P-008</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-008">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Location ระบุจังหวัด ไม่ใช่ Thailand ทั้งประเทศ</h4>
+      <p class="en">Location Setting</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>อ่าน: campaign_criterion (LOCATION) → geo_target_constant.target_type · เขียน: CampaignCriterionService · แปลงชื่อ: GeoTargetConstantService.SuggestGeoTargetConstants</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>เลือกจังหวัดที่ลูกค้าให้บริการจริง แล้วลบ target ระดับประเทศ</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> campaign_criterion (LOCATION), geo_target_constant</div>
+      <pre class="gaql">SELECT
+  campaign_criterion.location.geo_target_constant,
+  campaign_criterion.negative
+FROM campaign_criterion
+WHERE campaign_criterion.type = &#x27;LOCATION&#x27;</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>campaign_criterion.location.geo_target_constant</code></td><td>resource name</td><td>เช่น <code>geoTargetConstants/2764</code> (ประเทศไทย) — ต้อง resolve ต่อว่าเป็นระดับอะไรผ่าน resource <code>geo_target_constant</code></td></tr><tr><td><code>geo_target_constant.target_type</code></td><td>string</td><td>ระดับของ location เช่น “Country”, “Province/State”, “City” — ใช้ตัดสินว่าตั้งกว้างเกินไปหรือไม่</td></tr><tr><td><code>campaign_criterion.negative</code></td><td>bool</td><td>false = positive target (ยิงหาคนในพื้นที่นี้) — ต้องดูเฉพาะแถวที่ negative=false</td></tr></tbody></table>
+      <div class="spec-mutate"><b>เขียน/แก้ไข:</b> <code>CampaignCriterionService.MutateCampaignCriteria</code> — ลบ criterion ระดับประเทศ (<code>remove</code>) แล้ว <code>create</code> ใหม่เป็นระดับจังหวัด/เมือง โดยหา <code>geo_target_constant</code> ที่ถูกต้องผ่าน <code>GeoTargetConstantService.SuggestGeoTargetConstants</code> (ใส่ชื่อจังหวัดเป็น location name)</div>
+      <div class="spec-logic"><b>Logic:</b> fail เมื่อพบ positive location criterion ที่ <code>geo_target_constant.target_type = Country</code> สำหรับประเทศไทย ทั้งที่ธุรกิจให้บริการเฉพาะบางจังหวัด — ทำให้แยกรายงานหรือคุมงบรายจังหวัดไม่ได้</div>
+      </div>
+    </article>
+    <article class="rule is-warn" id="P-011">
+      <div class="rule-head">
+      <span class="rid">P-011</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-011">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Asset ครบ Call / Sitelink / Snippet / Callout</h4>
+      <p class="en">Extensions / Assets</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>campaign_asset / ad_group_asset / customer_asset จัดกลุ่มตาม field_type</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>เพิ่ม 3 ประเภทที่ขาด · Call asset ต้องมีเบอร์ที่รับสายได้จริง</p><ol><li>ระบบดึงร่าง Callout + Snippet จาก AI ให้ทีมรีวิว</li><li>ทีมกรอกเบอร์ Call asset ที่รับสายได้จริง</li><li>ผูก asset เข้าทุกแคมเปญ Search</li></ol></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> campaign_asset, ad_group_asset, customer_asset</div>
+      <pre class="gaql">SELECT campaign_asset.field_type, campaign_asset.status
+FROM campaign_asset
+WHERE campaign_asset.campaign = &#x27;customers/{id}/campaigns/{id}&#x27;</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>{level}_asset.field_type</code></td><td>enum <code>AssetFieldTypeEnum</code></td><td>ประเภท extension เช่น <code>SITELINK</code>, <code>CALLOUT</code>, <code>STRUCTURED_SNIPPET</code>, <code>CALL</code></td></tr><tr><td><code>{level}_asset.status</code></td><td>enum</td><td>สถานะการผูก asset เข้ากับระดับนั้น (enabled/removed)</td></tr></tbody></table>
+      <div class="spec-mutate"><b>เขียน/แก้ไข:</b> สร้าง asset ก่อนด้วย <code>AssetService.MutateAssets</code> แล้วผูกด้วย <code>CampaignAssetService</code> / <code>AdGroupAssetService</code> / <code>CustomerAssetService</code> ตามระดับที่ต้องการ พร้อมระบุ <code>field_type</code></div>
+      <div class="spec-logic"><b>Logic:</b> fail เมื่อ query ทั้ง 3 resource แล้วไม่พบ <code>field_type</code> ที่จำเป็นครบ 4 ประเภท (Call, Sitelink, Structured Snippet, Callout) — Call asset ต้องตรวจเพิ่มว่าเบอร์ที่ผูกรับสายได้จริง (ตรวจนอก API)</div>
+      </div>
+    </article>
+    <article class="rule is-warn" id="P-013">
+      <div class="rule-head">
+      <span class="rid">P-013</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-013">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Ad Strength = Excellent / Good</h4>
+      <p class="en">Ad Strength</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>ad_group_ad.ad_strength</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> ad_group_ad</div>
+      <pre class="gaql">SELECT ad_group_ad.ad.id, ad_group_ad.ad_strength
+FROM ad_group_ad
+WHERE ad_group_ad.status = &#x27;ENABLED&#x27;</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>ad_group_ad.ad_strength</code></td><td>enum <code>AdStrengthEnum</code></td><td><code>EXCELLENT</code> / <code>GOOD</code> / <code>AVERAGE</code> / <code>POOR</code> / <code>NO_ADS</code> / <code>PENDING</code> / <code>UNKNOWN</code> — คำนวณจากความหลากหลายของ headline/description และ relevance</td></tr></tbody></table>
+      <div class="spec-logic"><b>Logic:</b> fail เมื่อมี ad ที่ enabled อย่างน้อย 1 ตัวมี ad_strength ต่ำกว่า GOOD (คือ AVERAGE หรือ POOR)</div>
+      </div>
+    </article>
+    <article class="rule is-warn" id="P-014">
+      <div class="rule-head">
+      <span class="rid">P-014</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <span class="badge">เฉพาะ Search</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-014">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Search: มี negative keyword ชุดพื้นฐาน</h4>
+      <p class="en">Basic Negative Keywords</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>อ่าน: campaign_criterion / ad_group_criterion / shared_set (NEGATIVE_KEYWORDS) · เขียน: CampaignCriterionService / AdGroupCriterionService / SharedCriterionService</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>เลือกคำจาก Basic Negative Keyword List แล้ว Add negative</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> shared_set (NEGATIVE_KEYWORDS), shared_criterion, campaign_shared_set</div>
+      <pre class="gaql">SELECT shared_set.id, shared_set.type, shared_set.name
+FROM shared_set
+WHERE shared_set.type = &#x27;NEGATIVE_KEYWORDS&#x27;
+
+SELECT campaign_shared_set.campaign, campaign_shared_set.shared_set
+FROM campaign_shared_set</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>shared_set.type</code></td><td>enum <code>SharedSetTypeEnum</code></td><td>ต้องเป็น <code>NEGATIVE_KEYWORDS</code></td></tr><tr><td><code>shared_criterion.keyword.text / match_type</code></td><td>string / enum <code>KeywordMatchTypeEnum</code></td><td>คำและรูปแบบการแมตช์ของ negative keyword แต่ละคำในชุด</td></tr><tr><td><code>campaign_shared_set.campaign / .shared_set</code></td><td>resource name</td><td>ตัวเชื่อมว่า shared set ถูกผูกเข้ากับ campaign ไหนบ้าง</td></tr></tbody></table>
+      <div class="spec-mutate"><b>เขียน/แก้ไข:</b> 3 ขั้น: <code>SharedSetService.MutateSharedSets</code> (สร้าง set) → <code>SharedCriterionService.MutateSharedCriteria</code> (เพิ่มคำ) → <code>CampaignSharedSetService.MutateCampaignSharedSets</code> (ผูกเข้า campaign)</div>
+      <div class="spec-logic"><b>Logic:</b> fail เมื่อไม่พบ <code>shared_set</code> ประเภท NEGATIVE_KEYWORDS ที่ผูกกับ campaign นี้ผ่าน <code>campaign_shared_set</code> เลย หรือผูกอยู่แต่ยังไม่มีคำในชุดพื้นฐานที่ทีมกำหนด (คำเชิงข้อมูล/หางาน/รีวิว)</div>
+      </div>
+    </article>
+    <article class="rule is-warn" id="P-024">
+      <div class="rule-head">
+      <span class="rid">P-024</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-024">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>GA4 Tag ติดตั้งบนเว็บ + ยิงสัญญาณ</h4>
+      <p class="en">GA4 Tag</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>Ad Optimizer tag-health scan — ตรวจ config G-* + event stream</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">สแกนหน้าเว็บไซต์</span> — Ad Optimizer โหลดหน้าเว็บจริงแล้วตรวจ script / tag / event ที่ยิงออก</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>ให้ทีมเว็บเพิ่ม GA4 tag ผ่าน GTM แล้วยืนยัน realtime report</p><ol><li>เพิ่ม GA4 configuration tag ใน GTM container</li><li>ยิง test pageview ยืนยันใน GA4 Realtime</li><li>ผูก GA4 property กับ Google Ads (สำหรับ import)</li></ol></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind web">Website scan</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> หน้าเว็บไซต์จริง — ไม่ใช่ Google Ads API</div>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>Network request / inline config</code></td><td>HTTP request</td><td>หา <code>gtag('config', 'G-XXXXXXX')</code> หรือ GA4 Measurement Protocol hit (<code>google-analytics.com/g/collect</code>)</td></tr><tr><td><code>Property ID ที่คาดหวัง</code></td><td>string</td><td>เทียบกับ GA4 property ที่ผูกไว้กับบัญชี (จาก GA4 Admin API หรือค่าที่ New Job ส่งมา)</td></tr></tbody></table>
+      <div class="spec-logic"><b>Logic:</b> fail เมื่อไม่พบ G-id ที่ตรงกันยิงสัญญาณ หรือยิงแต่ไม่เห็นใน GA4 Realtime report</div>
+      </div>
+    </article>
+    <article class="rule is-warn" id="P-026">
+      <div class="rule-head">
+      <span class="rid">P-026</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <span class="badge">เฉพาะ Search</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-026">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Search: ปิด Display Network</h4>
+      <p class="en">Search Network / Display Network</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>อ่าน/เขียน: campaign.network_settings (target_search_network / target_content_network / target_partner_search_network)</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>ปิด Display Network (เก็บ Search + search partners ไว้)</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> campaign (network_settings)</div>
+      <pre class="gaql">SELECT
+  campaign.advertising_channel_type,
+  campaign.network_settings.target_search_network,
+  campaign.network_settings.target_content_network,
+  campaign.network_settings.target_partner_search_network
+FROM campaign
+WHERE campaign.advertising_channel_type = &#x27;SEARCH&#x27;</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>campaign.network_settings.target_search_network</code></td><td>bool</td><td>ยิงบน Google Search</td></tr><tr><td><code>campaign.network_settings.target_content_network</code></td><td>bool</td><td>Display Expansion — ยิงบน Google Display Network ด้วยงบ Search ที่เหลือ (ตัวที่ P-026 อยากให้ปิด)</td></tr><tr><td><code>campaign.network_settings.target_partner_search_network</code></td><td>bool</td><td>ยิงบน Search partner sites</td></tr></tbody></table>
+      <div class="spec-mutate"><b>เขียน/แก้ไข:</b> <code>CampaignService.MutateCampaigns</code> — operation <code>update</code>, field mask <code>network_settings.target_content_network</code> ตั้งเป็น <code>false</code></div>
+      <div class="spec-logic"><b>Logic:</b> fail เมื่อ campaign ประเภท SEARCH มี target_content_network = true (Display Expansion เปิดอยู่)</div>
+      </div>
+    </article>
+    <article class="rule is-warn" id="P-004">
+      <div class="rule-head">
+      <span class="rid">P-004</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Customization</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-004">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ตั้ง Primary / Secondary conversion</h4>
+      <p class="en">Primary / Secondary Conversion</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>conversion_action.primary_for_goal / campaign_conversion_goal</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>ตั้ง Add-to-cart และ Pageview เป็น Secondary (analysis only)</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> conversion_action</div>
+      <pre class="gaql">SELECT
+  conversion_action.id,
+  conversion_action.name,
+  conversion_action.primary_for_goal
+FROM conversion_action
+WHERE conversion_action.status = &#x27;ENABLED&#x27;</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>conversion_action.primary_for_goal</code></td><td>bool</td><td>true = นับใน bidding และ metric “Conversions” หลัก · false = ไม่ถูกใช้ optimize เว้นแต่ถูกระบุใน CustomConversionGoal แยกต่างหาก — ยังนับใน “All conversions” เสมอ</td></tr></tbody></table>
+      <div class="spec-mutate"><b>เขียน/แก้ไข:</b> <code>ConversionActionService.MutateConversionActions</code> — operation <code>update</code> field mask <code>primary_for_goal</code> ตั้งเป็น <code>false</code> สำหรับ action ที่ต้องการลดเป็น secondary</div>
+      <div class="spec-logic"><b>Logic:</b> fail เมื่อ conversion action ที่ควรเป็นตัวรอง (เช่น Add-to-cart, Pageview) มี <code>primary_for_goal = true</code> พร้อมกับ conversion หลักของธุรกิจ (เช่น Purchase) — ทำให้ bidding ปรับตามสัญญาณที่ไม่ใช่ยอดขายจริง</div>
+      </div>
+    </article>
+    <article class="rule is-warn" id="P-009">
+      <div class="rule-head">
+      <span class="rid">P-009</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Customization</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-009">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Location option = Presence / Presence-or-interest</h4>
+      <p class="en">Location Option</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>campaign.geo_target_type.positive_geo_target_type</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> campaign</div>
+      <pre class="gaql">SELECT campaign.geo_target_type_setting.positive_geo_target_type
+FROM campaign
+WHERE campaign.id = {campaign_id}</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>campaign.geo_target_type_setting.positive_geo_target_type</code></td><td>enum <code>PositiveGeoTargetTypeEnum</code></td><td><code>PRESENCE_OR_INTEREST</code> (ค่า default — เข้าถึงคนในพื้นที่ + คนที่สนใจพื้นที่นั้น) หรือ <code>PRESENCE</code> (เฉพาะคนที่อยู่จริงในพื้นที่ — เข้มกว่า เหมาะกับธุรกิจบริการเฉพาะพื้นที่)</td></tr></tbody></table>
+      <div class="spec-mutate"><b>เขียน/แก้ไข:</b> <code>CampaignService.MutateCampaigns</code> — operation <code>update</code>, field mask <code>geo_target_type_setting.positive_geo_target_type</code></div>
+      <div class="spec-logic"><b>Logic:</b> pass เมื่อค่าตรงกับประเภทธุรกิจที่ตกลงไว้ (ปกติแนะนำ PRESENCE สำหรับธุรกิจบริการในพื้นที่)</div>
+      </div>
+    </article>
+    <article class="rule is-warn" id="P-015">
+      <div class="rule-head">
+      <span class="rid">P-015</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Customization</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <span class="badge">เฉพาะ Display</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-015">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>GDN: ยกเว้นแอปมือถือ</h4>
+      <p class="en">GDN Mobile App Exclusion</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>อ่าน: campaign_criterion WHERE negative=true AND type IN (MOBILE_APPLICATION, MOBILE_APP_CATEGORY) · เขียน: CampaignCriterionService.MutateCampaignCriteria</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>ยกเว้นแอปมือถือทั้งหมด (mobileappcategory 69500) หรือเลือกบางหมวด/บางแอป</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      <dt>หมายเหตุ</dt><dd>ยกเว้นทั้งหมดในครั้งเดียวได้ด้วย negative <code>mobile_app_category → mobileAppCategoryConstants/69500</code> ซึ่ง API รองรับทั้งอ่านและเขียน · ระบบ browse หาแอปรายตัวเองไม่ได้ ต้องวาง URL หรือ app id เอง</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> campaign_criterion (mobile_app_category / mobile_application, negative)</div>
+      <pre class="gaql">SELECT campaign_criterion.mobile_app_category.mobile_app_category_constant,
+  campaign_criterion.mobile_application.app_id,
+  campaign_criterion.negative
+FROM campaign_criterion
+WHERE campaign_criterion.campaign = &#x27;customers/{id}/campaigns/{id}&#x27;
+  AND campaign_criterion.negative = true</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>campaign_criterion.mobile_app_category.mobile_app_category_constant</code></td><td>resource name</td><td>เช่น <code>mobileAppCategoryConstants/69500</code> = ทุกหมวดแอปมือถือ (ยกเว้นทีเดียวทั้งหมด)</td></tr><tr><td><code>campaign_criterion.mobile_application.app_id</code></td><td>string</td><td>ใช้เมื่อยกเว้นเป็นรายแอป แทนที่จะยกเว้นทั้งหมวด — ต้องแปลงจาก URL/store listing เป็นรูปแบบ <code>{store}-{app_id}</code> เอง (API ไม่ค้นหาให้)</td></tr><tr><td><code>campaign_criterion.negative</code></td><td>bool</td><td>ต้องเป็น true (นี่คือ exclusion ไม่ใช่ target)</td></tr></tbody></table>
+      <div class="spec-mutate"><b>เขียน/แก้ไข:</b> <code>CampaignCriterionService.MutateCampaignCriteria</code> — create negative criterion บน campaign ประเภท Display</div>
+      <div class="spec-logic"><b>Logic:</b> fail เมื่อ campaign ประเภท Display ไม่มี negative criterion ประเภท mobile app/category เลย</div>
+      <div class="spec-caveat"><b>ข้อควรระวัง:</b> ระบบค้นหาแอปมือถือทีละรายการเองไม่ได้ — ผู้ใช้ต้องวาง URL/app id เองแล้วระบบแปลงรูปแบบให้</div>
+      </div>
+    </article>
+    <article class="rule is-warn" id="P-017">
+      <div class="rule-head">
+      <span class="rid">P-017</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Customization</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <span class="badge">เฉพาะ Youtube</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-017">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>YouTube: ยกเว้นแอปมือถือ</h4>
+      <p class="en">YouTube Mobile App Exclusion</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>อ่าน: campaign_criterion negative placement · เขียน: CampaignCriterionService.MutateCampaignCriteria</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>ยกเว้นแอปมือถือทั้งหมด หรือเลือกบางหมวด/บางแอป</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      <dt>หมายเหตุ</dt><dd>ใช้ negative placement แบบเดียวกับ P-015 · ระบบ browse หาแอปรายตัวเองไม่ได้ ต้องวาง URL หรือ app id เอง</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> campaign_criterion (mobile_app_category / mobile_application, negative) — ระดับ YouTube/video campaign</div>
+      <pre class="gaql">SELECT campaign_criterion.mobile_app_category.mobile_app_category_constant,
+  campaign_criterion.negative
+FROM campaign_criterion
+WHERE campaign_criterion.campaign = &#x27;customers/{id}/campaigns/{id}&#x27;
+  AND campaign_criterion.negative = true</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>campaign_criterion.mobile_app_category.mobile_app_category_constant</code></td><td>resource name</td><td>กลไกเดียวกับ P-015 แต่ใช้กับ campaign ที่ยิงบน YouTube</td></tr></tbody></table>
+      <div class="spec-mutate"><b>เขียน/แก้ไข:</b> <code>CampaignCriterionService.MutateCampaignCriteria</code></div>
+      <div class="spec-logic"><b>Logic:</b> fail เมื่อ campaign ที่มี placement บน YouTube ไม่มี negative criterion ประเภทนี้เลย</div>
+      <div class="spec-caveat"><b>ข้อควรระวัง:</b> ระบบค้นหาแอปมือถือทีละรายการเองไม่ได้ — ผู้ใช้ต้องวาง URL/app id เองแล้วระบบแปลงรูปแบบให้ เหมือน P-015</div>
+      </div>
+    </article>
+  </div>
+
+  <h3><span class="badge b-info">Info</span> 1 ข้อ — แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น · ไม่บล็อกการออนไลน์</h3>
+  <div class="rules">
+    <article class="rule is-info" id="P-010">
+      <div class="rule-head">
+      <span class="rid">P-010</span>
+      <span class="badge b-info">Info</span>
+      <span class="badge">Customization</span>
+      <span class="badge">กึ่งอัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=P-010">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Language ตรงกลุ่มเป้าหมาย</h4>
+      <p class="en">Language</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>campaign_criterion (LANGUAGE)</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ต้องมีคนยืนยัน</span> — ระบบดึงข้อมูลให้ได้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น · ไม่บล็อกการออนไลน์</dd>
+      </dl>
+    <div class="apispec">
+      <div class="apispec-h"><span class="apispec-kind ">Google Ads API</span> API / Tag spec</div>
+      <div class="apispec-resource"><b>Resource:</b> campaign_criterion (LANGUAGE), language_constant</div>
+      <pre class="gaql">SELECT campaign_criterion.language.language_constant
+FROM campaign_criterion
+WHERE campaign_criterion.type = &#x27;LANGUAGE&#x27;</pre>
+      <table class="spectable"><thead><tr><th style="width:280px">Field</th><th style="width:170px">Type</th><th>ความหมาย</th></tr></thead><tbody><tr><td><code>campaign_criterion.language.language_constant</code></td><td>resource name</td><td>เช่น <code>languageConstants/1054</code> (ไทย), <code>languageConstants/1000</code> (อังกฤษ)</td></tr></tbody></table>
+      <div class="spec-mutate"><b>เขียน/แก้ไข:</b> <code>CampaignCriterionService.MutateCampaignCriteria</code></div>
+      <div class="spec-logic"><b>Logic:</b> semi-auto — ระบบดึงรายการภาษาที่ตั้งไว้มาเทียบกับกลุ่มเป้าหมายในบรีฟ การตัดสินว่า “ตรง” เป็นดุลยพินิจของทีม</div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- 03 META -->
+<section id="meta">
+  <div class="eyebrow">03 / Rule set</div>
+  <h2>Meta Ads <span class="phase phase-2">Phase 2</span></h2>
+  <p class="note">เขียนเตรียมไว้ล่วงหน้า ยังไม่เข้าเฟสแรก · endpoint อ้างจาก Marketing API ใน prototype ต้องตรวจกับเวอร์ชันจริงอีกครั้ง · rule set version <code>meta-1.0.0</code> · ทั้งหมด <b>9 ข้อ</b> — Critical 2, Warning 5, Info 2 · ดึงผ่าน API 9 ข้อ, ต้องสแกนเว็บหรืออ่าน GTM 0 ข้อ, ระบบแก้ให้ได้เองโดยไม่ต้องออกนอกระบบ 3 ข้อ</p>
+
+  <h3>สรุปทั้งชุด</h3>
+  <table>
+    <thead><tr><th style="width:64px">ID</th><th style="width:230px">ตรวจอะไร</th><th style="width:90px">ระดับ</th><th style="width:105px">หมวด</th><th>แหล่งข้อมูล</th><th style="width:120px">วิธีแก้</th><th style="width:100px">Prototype</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#M-01"><b>M-01</b></a></td><td><b>ติดตั้ง Meta Pixel + มีสัญญาณเข้า</b><br>Meta Pixel Installation</td><td><span class="badge b-crit">Critical</span></td><td>Configuration</td><td>Ads API · อ่าน · ต้องมีคนยืนยัน</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-01">Prototype ↗</a></td></tr>
+      <tr><td><a href="#M-12"><b>M-12</b></a></td><td><b>ติดตั้ง Website Conversions (ผ่าน GTM)</b><br>Website Conversions Installation</td><td><span class="badge b-crit">Critical</span></td><td>Configuration</td><td>Ads API · อ่าน · ต้องมีคนยืนยัน</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-12">Prototype ↗</a></td></tr>
+      <tr><td><a href="#M-02"><b>M-02</b></a></td><td><b>สร้าง Custom + Lookalike audience ล่วงหน้า</b><br>Custom + Lookalike Audience</td><td><span class="badge b-warn">Warning</span></td><td>Setup</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-02">Prototype ↗</a></td></tr>
+      <tr><td><a href="#M-05"><b>M-05</b></a></td><td><b>ตั้ง Budget &amp; End date ตรงสัญญา</b><br>Budget &amp; End Date</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>Ads API · อ่าน · ข้อมูลใน DMS / New Job</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-05">Prototype ↗</a></td></tr>
+      <tr><td><a href="#M-14"><b>M-14</b></a></td><td><b>Budget mode: พบ Daily budget ต้องตรวจสอบ</b><br>Budget Mode — Daily budget check</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>Ads API · อ่าน</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-14">Prototype ↗</a></td></tr>
+      <tr><td><a href="#M-06"><b>M-06</b></a></td><td><b>ปิด Advantage+ Audience (คุม targeting เอง)</b><br>Advantage+ Audience — must be OFF</td><td><span class="badge b-warn">Warning</span></td><td>Customization</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-06">Prototype ↗</a></td></tr>
+      <tr><td><a href="#M-09"><b>M-09</b></a></td><td><b>ปิด Advantage+ Creative / Multi-advertiser (คุมครีเอทีฟเอง)</b><br>Advantage+ Creative / Multi-advertiser — must be OFF</td><td><span class="badge b-warn">Warning</span></td><td>Customization</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-09">Prototype ↗</a></td></tr>
+      <tr><td><a href="#M-03"><b>M-03</b></a></td><td><b>ตั้งชื่อ Campaign / Ad set / Ad ตามรูปแบบ</b><br>Naming Convention</td><td><span class="badge b-info">Info</span></td><td>Setup</td><td>Ads API · อ่าน · ต้องมีคนยืนยัน</td><td>ระบบเสนอชื่อให้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-03">Prototype ↗</a></td></tr>
+      <tr><td><a href="#M-15"><b>M-15</b></a></td><td><b>ตั้งงบระดับแคมเปญ (CBO) เป็นค่าเริ่มต้น — พบตั้งเป็น ABO</b><br>Campaign Budget (CBO) default</td><td><span class="badge b-info">Info</span></td><td>Configuration</td><td>Ads API · อ่าน</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-15">Prototype ↗</a></td></tr>
+    </tbody>
+  </table>
+
+  <h3><span class="badge b-crit">Critical</span> 2 ข้อ — ถ้าไม่แก้ = ออนไลน์ไม่ได้ · บล็อกปุ่มดำเนินการต่อจาก backend policy</h3>
+  <div class="rules">
+    <article class="rule is-crit" id="M-01">
+      <div class="rule-head">
+      <span class="rid">M-01</span>
+      <span class="badge b-crit">Critical</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-01">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ติดตั้ง Meta Pixel + มีสัญญาณเข้า</h4>
+      <p class="en">Meta Pixel Installation</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>adspixels{last_fired_time, stats} — ยืนยันวิธีติดตั้งผ่าน GTM / Pixel Helper เองอีกชั้น</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ต้องมีคนยืนยัน</span> — ระบบดึงข้อมูลให้ได้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>ถ้าไม่แก้ = ออนไลน์ไม่ได้ · บล็อกปุ่มดำเนินการต่อจาก backend policy</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-crit" id="M-12">
+      <div class="rule-head">
+      <span class="rid">M-12</span>
+      <span class="badge b-crit">Critical</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-12">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ติดตั้ง Website Conversions (ผ่าน GTM)</h4>
+      <p class="en">Website Conversions Installation</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>adspixels events + custom_conversions — ยืนยันว่าใช้ GTM เองอีกชั้น</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ต้องมีคนยืนยัน</span> — ระบบดึงข้อมูลให้ได้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>ถ้าไม่แก้ = ออนไลน์ไม่ได้ · บล็อกปุ่มดำเนินการต่อจาก backend policy</dd>
+      </dl>
+    
+    </article>
+  </div>
+
+  <h3><span class="badge b-warn">Warning</span> 5 ข้อ — ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</h3>
+  <div class="rules">
+    <article class="rule is-warn" id="M-02">
+      <div class="rule-head">
+      <span class="rid">M-02</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Setup</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-02">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>สร้าง Custom + Lookalike audience ล่วงหน้า</h4>
+      <p class="en">Custom + Lookalike Audience</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>อ่าน: GET /act_{id}/customaudiences · เขียน: POST /act_{id}/customaudiences (subtype=ENGAGEMENT / LOOKALIKE)</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>เลือก audience ที่ต้องการ แล้วกดสร้าง — ระบบยิง POST ไป Meta ให้เลย</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-warn" id="M-05">
+      <div class="rule-head">
+      <span class="rid">M-05</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-05">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ตั้ง Budget &amp; End date ตรงสัญญา</h4>
+      <p class="en">Budget &amp; End Date</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>daily_budget / lifetime_budget + start_time/end_time (cross-check กับ Expect Date ของ New Job)</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ข้อมูลใน DMS / New Job</span> — เทียบกับค่าที่รับมาจาก job context เช่น Expect Date หรือ tracking method</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>ใส่ end date ให้ตรง Expect Date ของงาน หรือเปลี่ยนเป็น daily budget</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      <dt>หมายเหตุ</dt><dd>เป็น rule ที่ต้อง cross-check กับ job context — ใช้ Expect Date ที่ New Job ส่งมาเป็นตัวเทียบ</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-warn" id="M-14">
+      <div class="rule-head">
+      <span class="rid">M-14</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-14">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Budget mode: พบ Daily budget ต้องตรวจสอบ</h4>
+      <p class="en">Budget Mode — Daily budget check</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>adset.budget_mode / daily_budget — flag เมื่อ = daily</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>เปลี่ยนเป็น Lifetime budget หรือกดยืนยันว่า Daily ถูกต้องตามที่ตกลงกับลูกค้า</p><ol><li>เช็คใบงาน / brief ว่าลูกค้าตกลงงบแบบไหน</li><li>ถ้าไม่ตรง — เปลี่ยน ad set เป็น Lifetime budget</li><li>ถ้าตรง — กด “ดำเนินการแก้ไขแล้ว” เพื่อยืนยัน</li></ol></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-warn" id="M-06">
+      <div class="rule-head">
+      <span class="rid">M-06</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Customization</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-06">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ปิด Advantage+ Audience (คุม targeting เอง)</h4>
+      <p class="en">Advantage+ Audience — must be OFF</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>อ่าน: GET /{adset}?fields=targeting{targeting_automation} · เขียน: POST /{adset} targeting.targeting_automation.advantage_audience = 0</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ทำไมต้องมี</dt><dd>บัญชี managed ทีมต้องคุมกลุ่มเป้าหมายเองให้แม่น — Advantage+ Audience ขยายออกนอกกลุ่มที่กำหนด ทำให้งบไหลไป reach ที่ไม่ตรงตั้งแต่ช่วงต้น และอ่านผลแยกตามกลุ่มยาก · เปิดเฉพาะเมื่อ PO จงใจให้ Meta ทดสอบขยายกลุ่ม</dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-warn" id="M-09">
+      <div class="rule-head">
+      <span class="rid">M-09</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Customization</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-09">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ปิด Advantage+ Creative / Multi-advertiser (คุมครีเอทีฟเอง)</h4>
+      <p class="en">Advantage+ Creative / Multi-advertiser — must be OFF</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>อ่าน: ad.creative.degrees_of_freedom_spec + adset.multi_advertiser_ads · เขียน: POST /{adset} multi_advertiser_ads.enroll_status=OPT_OUT</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ทำไมต้องมี</dt><dd>ทีมส่งครีเอทีฟที่ลูกค้าอนุมัติแล้ว — Advantage+ Creative จะสลับ/ครอป/ใส่ฟิลเตอร์เอง ทำให้ครีเอทีฟไม่ตรงที่อนุมัติ · Multi-advertiser ยังโชว์โฆษณาคู่แข่งใต้/ข้างโฆษณาเรา · เปิดเฉพาะเมื่อจงใจให้ Meta ทดสอบครีเอทีฟ</dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    
+    </article>
+  </div>
+
+  <h3><span class="badge b-info">Info</span> 2 ข้อ — แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น · ไม่บล็อกการออนไลน์</h3>
+  <div class="rules">
+    <article class="rule is-info" id="M-03">
+      <div class="rule-head">
+      <span class="rid">M-03</span>
+      <span class="badge b-info">Info</span>
+      <span class="badge">Setup</span>
+      <span class="badge">กึ่งอัตโนมัติ</span>
+      <span class="badge">ระบบเสนอชื่อให้</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-03">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ตั้งชื่อ Campaign / Ad set / Ad ตามรูปแบบ</h4>
+      <p class="en">Naming Convention</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>campaign/adset/ad.name เทียบ regex ของทีม</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ต้องมีคนยืนยัน</span> — ระบบดึงข้อมูลให้ได้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม</span></dd>
+      <dt>ทำไมต้องมี</dt><dd>ชื่อที่ไม่ตรงรูปแบบทำให้ทีมอื่นอ่านรายงานแยกกลุ่มไม่ออก และไล่ debug แคมเปญที่มีปัญหาช้าลงเวลาต้องดูจากชื่อ</dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ระบบเสนอชื่อที่ตรงรูปแบบให้เลือก แล้วทีมนำไปเปลี่ยนเองที่ Ads Manager — ระบบไม่ rename ให้</dd>
+      <dt>ผลต่อ gate</dt><dd>แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น · ไม่บล็อกการออนไลน์</dd>
+      <dt>หมายเหตุ</dt><dd>regex ของรูปแบบชื่อยังต้องยืนยันกับทีมก่อน — prototype ใช้ตัวอย่างไว้เฉยๆ</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-info" id="M-15">
+      <div class="rule-head">
+      <span class="rid">M-15</span>
+      <span class="badge b-info">Info</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=M-15">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ตั้งงบระดับแคมเปญ (CBO) เป็นค่าเริ่มต้น — พบตั้งเป็น ABO</h4>
+      <p class="en">Campaign Budget (CBO) default</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>ตรวจว่างบอยู่ระดับ campaign (daily/lifetime_budget) หรือ adset</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span></dd>
+      <dt>ทำไมต้องมี</dt><dd>CBO ให้ Meta กระจายงบไป ad set ที่ทำผลได้ดีสุดแบบเรียลไทม์ — ไม่ต้องคอยโยกงบเอง · ออกจาก learning phase เร็วกว่าเพราะงบไม่กระจายบางเกิน · ABO เหมาะเฉพาะเมื่อจงใจ guarantee งบขั้นต่ำต่อกลุ่ม (เช่น กันงบ audience ทดสอบ) — ถ้าไม่ใช่เคสนั้น ใช้ CBO</dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>เปลี่ยนเป็น CBO (งบระดับแคมเปญ) หรือกดยืนยันว่า ABO จำเป็นสำหรับงานนี้</p><ol><li>ดู brief ว่ามีเหตุผลต้องคุมงบต่อ ad set ไหม</li><li>ถ้าไม่มี — เปิด Advantage campaign budget แล้วย้ายงบไปที่แคมเปญ</li><li>ถ้ามี — กด “ดำเนินการแก้ไขแล้ว” พร้อมระบุเหตุผล</li></ol></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น · ไม่บล็อกการออนไลน์</dd>
+      </dl>
+    
+    </article>
+  </div>
+</section>
+
+<!-- 04 TIKTOK -->
+<section id="tiktok">
+  <div class="eyebrow">04 / Rule set</div>
+  <h2>TikTok Ads <span class="phase phase-2">Phase 2</span></h2>
+  <p class="note">เขียนเตรียมไว้ล่วงหน้า ยังไม่เข้าเฟสแรก · endpoint อ้างจาก TikTok Business API ใน prototype ต้องตรวจกับเวอร์ชันจริงอีกครั้ง · rule set version <code>tiktok-1.0.0</code> · ทั้งหมด <b>13 ข้อ</b> — Critical 1, Warning 7, Info 5 · ดึงผ่าน API 13 ข้อ, ต้องสแกนเว็บหรืออ่าน GTM 0 ข้อ, ระบบแก้ให้ได้เองโดยไม่ต้องออกนอกระบบ 2 ข้อ</p>
+
+  <h3>สรุปทั้งชุด</h3>
+  <table>
+    <thead><tr><th style="width:64px">ID</th><th style="width:230px">ตรวจอะไร</th><th style="width:90px">ระดับ</th><th style="width:105px">หมวด</th><th>แหล่งข้อมูล</th><th style="width:120px">วิธีแก้</th><th style="width:100px">Prototype</th></tr></thead>
+    <tbody>
+      <tr><td><a href="#T-01"><b>T-01</b></a></td><td><b>ติดตั้ง TikTok Pixel + มีสัญญาณเข้า</b><br>TikTok Pixel Installation</td><td><span class="badge b-crit">Critical</span></td><td>Configuration</td><td>Ads API · อ่าน · ต้องมีคนยืนยัน</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-01">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-02"><b>T-02</b></a></td><td><b>สร้าง Custom + Lookalike audience ล่วงหน้า</b><br>Custom &amp; Lookalike Audiences</td><td><span class="badge b-warn">Warning</span></td><td>Setup</td><td>Ads API · อ่าน</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-02">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-06"><b>T-06</b></a></td><td><b>Objective ตรงเป้าหมายลูกค้า</b><br>Campaign Objective</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>Ads API · อ่าน · ต้องมีคนยืนยัน</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-06">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-07"><b>T-07</b></a></td><td><b>Budget type (Daily / Lifetime) ตรงที่ตกลง</b><br>Budget Type</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>Ads API · อ่าน</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-07">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-08"><b>T-08</b></a></td><td><b>วันเปิด-ปิดโฆษณาถูกต้อง</b><br>Start &amp; End Dates</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>Ads API · อ่าน · ข้อมูลใน DMS / New Job</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-08">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-12"><b>T-12</b></a></td><td><b>Budget mode: พบ Daily budget ต้องตรวจสอบ</b><br>Budget Mode — Daily budget check</td><td><span class="badge b-warn">Warning</span></td><td>Configuration</td><td>Ads API · อ่าน</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-12">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-09"><b>T-09</b></a></td><td><b>Audience กว้าง/กลาง หลีกเลี่ยง Narrow</b><br>Audience Size</td><td><span class="badge b-warn">Warning</span></td><td>Customization</td><td>Ads API · อ่าน · ต้องมีคนยืนยัน</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-09">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-11"><b>T-11</b></a></td><td><b>Spending Power = All (ไม่ใช่ High)</b><br>Spending Power</td><td><span class="badge b-warn">Warning</span></td><td>Customization</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-11">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-03"><b>T-03</b></a></td><td><b>ตั้งชื่อ Campaign ตาม objective</b><br>Campaign Naming</td><td><span class="badge b-info">Info</span></td><td>Setup</td><td>Ads API · อ่าน · ต้องมีคนยืนยัน</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-03">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-04"><b>T-04</b></a></td><td><b>ชื่อ Ad group มี audience + อายุ + location</b><br>Ad Group Naming</td><td><span class="badge b-info">Info</span></td><td>Setup</td><td>Ads API · อ่าน + เขียน</td><td>ระบบแก้ให้ได้</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-04">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-05"><b>T-05</b></a></td><td><b>ตั้งชื่อ Ad ตามแคปชั่นของโพสต์</b><br>Ad Naming</td><td><span class="badge b-info">Info</span></td><td>Setup</td><td>Ads API · อ่าน · ต้องมีคนยืนยัน</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-05">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-13"><b>T-13</b></a></td><td><b>เปิด Campaign Budget Optimization (CBO) เป็นค่าเริ่มต้น — พบตั้งเป็น ABO</b><br>Campaign Budget Optimization (CBO) default</td><td><span class="badge b-info">Info</span></td><td>Configuration</td><td>Ads API · อ่าน</td><td>ทีมแก้นอกระบบ</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-13">Prototype ↗</a></td></tr>
+      <tr><td><a href="#T-10"><b>T-10</b></a></td><td><b>ตั้งภาษาให้ตรงภาษาเครื่องของผู้ใช้</b><br>Language Settings</td><td><span class="badge b-info">Info</span></td><td>Customization</td><td>Ads API · อ่าน</td><td>ไม่มี action</td><td><a class="badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-10">Prototype ↗</a></td></tr>
+    </tbody>
+  </table>
+
+  <h3><span class="badge b-crit">Critical</span> 1 ข้อ — ถ้าไม่แก้ = ออนไลน์ไม่ได้ · บล็อกปุ่มดำเนินการต่อจาก backend policy</h3>
+  <div class="rules">
+    <article class="rule is-crit" id="T-01">
+      <div class="rule-head">
+      <span class="rid">T-01</span>
+      <span class="badge b-crit">Critical</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-01">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ติดตั้ง TikTok Pixel + มีสัญญาณเข้า</h4>
+      <p class="en">TikTok Pixel Installation</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>/pixel/list/ + /pixel/stats/ (last event time) — ยืนยันติดตั้งผ่าน GTM เองอีกชั้น</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ต้องมีคนยืนยัน</span> — ระบบดึงข้อมูลให้ได้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>ถ้าไม่แก้ = ออนไลน์ไม่ได้ · บล็อกปุ่มดำเนินการต่อจาก backend policy</dd>
+      </dl>
+    
+    </article>
+  </div>
+
+  <h3><span class="badge b-warn">Warning</span> 7 ข้อ — ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</h3>
+  <div class="rules">
+    <article class="rule is-warn" id="T-02">
+      <div class="rule-head">
+      <span class="rid">T-02</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Setup</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-02">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>สร้าง Custom + Lookalike audience ล่วงหน้า</h4>
+      <p class="en">Custom &amp; Lookalike Audiences</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>/dmp/custom_audience/list/ + /dmp/lookalike_audience/list/</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>สร้าง Video Engagement + Lookalike แล้วรอเก็บข้อมูล 2–3 วันก่อนยิง</p><ol><li>สร้าง Custom Audience จาก Video Engagement (7–15 วัน)</li><li>สร้าง Lookalike จาก Website Traffic</li><li>รอ status = Available</li></ol></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-warn" id="T-06">
+      <div class="rule-head">
+      <span class="rid">T-06</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">กึ่งอัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-06">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Objective ตรงเป้าหมายลูกค้า</h4>
+      <p class="en">Campaign Objective</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>campaign.objective_type</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ต้องมีคนยืนยัน</span> — ระบบดึงข้อมูลให้ได้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-warn" id="T-07">
+      <div class="rule-head">
+      <span class="rid">T-07</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-07">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Budget type (Daily / Lifetime) ตรงที่ตกลง</h4>
+      <p class="en">Budget Type</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>campaign/adgroup.budget_mode + budget</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-warn" id="T-08">
+      <div class="rule-head">
+      <span class="rid">T-08</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-08">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>วันเปิด-ปิดโฆษณาถูกต้อง</h4>
+      <p class="en">Start &amp; End Dates</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>adgroup.schedule_type / schedule_start_time / schedule_end_time (cross-check Expect Date)</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ข้อมูลใน DMS / New Job</span> — เทียบกับค่าที่รับมาจาก job context เช่น Expect Date หรือ tracking method</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>ตั้ง schedule แบบ start–end ให้วันปิดตรง Expect Date</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      <dt>หมายเหตุ</dt><dd>เป็น rule ที่ต้อง cross-check กับ job context — ใช้ Expect Date ที่ New Job ส่งมาเป็นตัวเทียบ</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-warn" id="T-12">
+      <div class="rule-head">
+      <span class="rid">T-12</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-12">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Budget mode: พบ Daily budget ต้องตรวจสอบ</h4>
+      <p class="en">Budget Mode — Daily budget check</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>adgroup.budget_mode = BUDGET_MODE_DAY — flag เมื่อ = daily</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>เปลี่ยนเป็น Lifetime budget หรือกดยืนยันว่า Daily ถูกต้องตามที่ตกลงกับลูกค้า</p><ol><li>เช็คใบงาน / brief ว่าลูกค้าตกลงงบแบบไหน</li><li>ถ้าไม่ตรง — เปลี่ยน ad group เป็น Lifetime budget</li><li>ถ้าตรง — กด “ดำเนินการแก้ไขแล้ว” เพื่อยืนยัน</li></ol></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-warn" id="T-09">
+      <div class="rule-head">
+      <span class="rid">T-09</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Customization</span>
+      <span class="badge">กึ่งอัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-09">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Audience กว้าง/กลาง หลีกเลี่ยง Narrow</h4>
+      <p class="en">Audience Size</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>ประเมิน audience size จาก targeting (เกณฑ์ Narrow เป็นดุลพินิจของทีม)</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ต้องมีคนยืนยัน</span> — ระบบดึงข้อมูลให้ได้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>ขยาย interest/behavior หรือเปิด audience expansion ให้ขึ้นระดับ Balanced</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      <dt>หมายเหตุ</dt><dd>เกณฑ์ว่า audience แค่ไหนถือว่า Narrow ยังเป็นดุลพินิจของทีม — ต้องตกลงตัวเลขให้ชัดก่อน implement</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-warn" id="T-11">
+      <div class="rule-head">
+      <span class="rid">T-11</span>
+      <span class="badge b-warn">Warning</span>
+      <span class="badge">Customization</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-11">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>Spending Power = All (ไม่ใช่ High)</h4>
+      <p class="en">Spending Power</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>adgroup.spending_power</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>เปลี่ยนเป็น SPENDING_POWER_ALL</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>ควรแก้ก่อนออนไลน์ · ข้ามได้แต่ต้องมีผู้มีสิทธิ์ยืนยัน + บันทึก audit</dd>
+      </dl>
+    
+    </article>
+  </div>
+
+  <h3><span class="badge b-info">Info</span> 5 ข้อ — แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น · ไม่บล็อกการออนไลน์</h3>
+  <div class="rules">
+    <article class="rule is-info" id="T-03">
+      <div class="rule-head">
+      <span class="rid">T-03</span>
+      <span class="badge b-info">Info</span>
+      <span class="badge">Setup</span>
+      <span class="badge">กึ่งอัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-03">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ตั้งชื่อ Campaign ตาม objective</h4>
+      <p class="en">Campaign Naming</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>campaign.campaign_name เทียบ regex ทีม</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ต้องมีคนยืนยัน</span> — ระบบดึงข้อมูลให้ได้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น · ไม่บล็อกการออนไลน์</dd>
+      <dt>หมายเหตุ</dt><dd>regex ของรูปแบบชื่อยังต้องยืนยันกับทีมก่อน — prototype ใช้ตัวอย่างไว้เฉยๆ</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-info" id="T-04">
+      <div class="rule-head">
+      <span class="rid">T-04</span>
+      <span class="badge b-info">Info</span>
+      <span class="badge">Setup</span>
+      <span class="badge">กึ่งอัตโนมัติ</span>
+      <span class="badge b-fix">ระบบแก้ให้ได้</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-04">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ชื่อ Ad group มี audience + อายุ + location</h4>
+      <p class="en">Ad Group Naming</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>adgroup.adgroup_name</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge b-fix">Ads API · อ่าน + เขียน</span> — ดึงผ่าน API และยิง mutation กลับไปแก้ที่แพลตฟอร์มได้</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>ระบบเปลี่ยนชื่อให้ครบ audience + age + location</p></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>กดยืนยันแล้วระบบยิง mutation ไปแก้ที่แพลตฟอร์มให้เลย · ต้อง preview ก่อนและบันทึก before/after</dd>
+      <dt>ผลต่อ gate</dt><dd>แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น · ไม่บล็อกการออนไลน์</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-info" id="T-05">
+      <div class="rule-head">
+      <span class="rid">T-05</span>
+      <span class="badge b-info">Info</span>
+      <span class="badge">Setup</span>
+      <span class="badge">กึ่งอัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-05">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ตั้งชื่อ Ad ตามแคปชั่นของโพสต์</h4>
+      <p class="en">Ad Naming</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>ad.ad_name</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span>
+        <span class="srcline"><span class="badge">ต้องมีคนยืนยัน</span> — ระบบดึงข้อมูลให้ได้ แต่เกณฑ์ตัดสินเป็นดุลพินิจของทีม</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น · ไม่บล็อกการออนไลน์</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-info" id="T-13">
+      <div class="rule-head">
+      <span class="rid">T-13</span>
+      <span class="badge b-info">Info</span>
+      <span class="badge">Configuration</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ทีมแก้นอกระบบ</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-13">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>เปิด Campaign Budget Optimization (CBO) เป็นค่าเริ่มต้น — พบตั้งเป็น ABO</h4>
+      <p class="en">Campaign Budget Optimization (CBO) default</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>campaign.budget_optimize_on — flag เมื่อ = false</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span></dd>
+      <dt>ทำไมต้องมี</dt><dd>CBO ให้ TikTok กระจายงบไป ad group ที่ทำผลได้ดีสุดอัตโนมัติ — คุมง่ายกว่าและออกจาก learning เร็วกว่า · ABO เหมาะเฉพาะเมื่อต้อง guarantee งบขั้นต่ำต่อกลุ่ม / ทดสอบ audience แยกกันชัด ๆ</dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd><p style='margin:0'>เปิด CBO ที่ระดับแคมเปญ หรือกดยืนยันว่า ABO จำเป็นสำหรับงานนี้</p><ol><li>ดู brief ว่าต้องคุมงบต่อ ad group ไหม</li><li>ถ้าไม่ต้อง — เปิด CBO แล้วย้ายงบไประดับแคมเปญ</li><li>ถ้าต้อง — กด “ดำเนินการแก้ไขแล้ว” พร้อมระบุเหตุผล</li></ol></dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>เปิด deep link ไปแก้ที่ Ads Manager / GTM / เว็บไซต์ แล้วกลับมากด “ตรวจซ้ำ”</dd>
+      <dt>ผลต่อ gate</dt><dd>แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น · ไม่บล็อกการออนไลน์</dd>
+      </dl>
+    
+    </article>
+    <article class="rule is-info" id="T-10">
+      <div class="rule-head">
+      <span class="rid">T-10</span>
+      <span class="badge b-info">Info</span>
+      <span class="badge">Customization</span>
+      <span class="badge">อัตโนมัติ</span>
+      <span class="badge">ไม่มี action</span>
+      <a class="badge badge-link" href="../prototype/reference/new-job-ad-validate.integrated.html#rule=T-10">เปิดใน Prototype ↗</a>
+      </div>
+      <h4>ตั้งภาษาให้ตรงภาษาเครื่องของผู้ใช้</h4>
+      <p class="en">Language Settings</p>
+      <dl>
+      <dt>ตรวจอย่างไร</dt><dd><code>adgroup.languages</code></dd>
+      <dt>แหล่งข้อมูล</dt><dd><span class="srcline"><span class="badge">Ads API · อ่าน</span> — ดึงผ่าน API ของแพลตฟอร์มอย่างเดียว ไม่เขียนกลับ</span></dd>
+      <dt>ถ้าไม่ผ่าน</dt><dd>ไม่มีขั้นตอนแก้ไขกำหนดไว้ — ผ่านหรือไม่ผ่านตามผลตรวจ</dd>
+      <dt>การแก้ทำได้แบบ</dt><dd>ผ่านหรือไม่ผ่านตามผลตรวจอย่างเดียว ไม่มีปุ่มแก้ในหน้านี้</dd>
+      <dt>ผลต่อ gate</dt><dd>แนะนำให้ปรับเพื่อผลลัพธ์ที่ดีขึ้น · ไม่บล็อกการออนไลน์</dd>
+      </dl>
+    
+    </article>
+  </div>
+</section>
+
+<footer>
+  <div class="bar">
+    <span>SOURCE · prototype/reference/new-job-ad-validate.integrated.html (V_GOOGLE / V_META / V_TIKTOK) + docs/PRD.md §5–§6</span>
+    <a href="index.html">หน้ารวม</a>
+    <a href="user-flow.html">User flow แบบ end-to-end</a>
+    <a href="ad-validate.html">Ad Validate — flow · logic · structure</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
